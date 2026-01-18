@@ -1,0 +1,10 @@
+[package]
+name = "runtime"
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes"]
+description = "7D Crystal Runtime"
+
+[dependencies]
+anyhow = "1.0"
+libc = "0.2"

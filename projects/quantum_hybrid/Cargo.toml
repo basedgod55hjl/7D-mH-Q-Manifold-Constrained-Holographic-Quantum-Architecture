@@ -1,0 +1,10 @@
+[package]
+name = "quantum_hybrid"
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes"]
+description = "7D Crystal Quantum-Classical Hybrid Simulator"
+
+[dependencies]
+num-complex = "0.4"
+rand = "0.8"

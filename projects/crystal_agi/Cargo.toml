@@ -1,0 +1,21 @@
+[package]
+name = "crystal_agi"
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes <basedgod@7dcrystal.io>"]
+description = "Crystal AGI - Manifold-Native Intelligence"
+
+[dependencies]
+anyhow = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+tracing = "0.1"
+rand = "0.8"
+
+# Local crates
+compiler = { path = "../../compiler" }
+runtime = { path = "../../runtime" }
+transformer = { path = "../../transformer" }
+
+[[bin]]
+name = "crystal_agi"
+path = "src/main.rs"

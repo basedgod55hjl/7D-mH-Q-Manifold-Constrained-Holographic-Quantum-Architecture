@@ -1,0 +1,9 @@
+[package]
+name = "crystal_profiler"
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes"]
+description = "7D Crystal Profiler Tool"
+
+[dependencies]
+tracing = "0.1"

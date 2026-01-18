@@ -1,0 +1,11 @@
+[package]
+name = "compiler"
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes"]
+description = "7D Crystal MHQL Compiler"
+
+[dependencies]
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
