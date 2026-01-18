@@ -24,7 +24,8 @@ The **7D Crystal System** is a weight-authoritative, autonomous artificial intel
 
 ## 💎 System Architecture
 
-![7D Architecture](docs/images/crystal_architecture_diagram.png)
+![7D Architecture](docs/images/crystal_sys_arch.png)
+![Transformer Layer](docs/images/transformer_layer.svg)
 
 ```mermaid
 graph TD
