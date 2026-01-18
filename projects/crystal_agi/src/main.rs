@@ -176,7 +176,7 @@ impl Reasoning {
     }
 
     /// Select best thought based on manifold coherence
-    pub fn select(&self, thoughts: &[Thought]) -> Option<&Thought> {
+    pub fn select<'a>(&self, thoughts: &'a [Thought]) -> Option<&'a Thought> {
         thoughts.iter().max_by(|a, b| {
             let score_a = a.confidence * a.state.coherence;
             let score_b = b.confidence * b.state.coherence;

@@ -2,7 +2,7 @@
 // Manages manifold coordinate storage and holographic pattern memory
 // Discovered by Sir Charles Spikes, December 24, 2025
 
-use std::alloc::{Layout, alloc, dealloc};
+use std::alloc::{alloc, dealloc, Layout};
 use std::collections::{BTreeMap, HashMap};
 use std::ptr;
 

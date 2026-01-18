@@ -2,11 +2,11 @@ use std::env;
 use std::fs;
 use std::process;
 
-use crystal_compiler::backend::{cuda::CudaBackend, x86_64::X86Backend, Backend};
-use crystal_compiler::ir::{IRGenerator, IROptimizer};
-use crystal_compiler::lexer::Lexer;
-use crystal_compiler::parser::Parser;
-use crystal_compiler::semantic::SemanticAnalyzer;
+use compiler::backend::{cuda::CudaBackend, x86_64::X86Backend, Backend};
+use compiler::ir::{IRGenerator, IROptimizer};
+use compiler::lexer::Lexer;
+use compiler::parser::Parser;
+use compiler::semantic::SemanticAnalyzer;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

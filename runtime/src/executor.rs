@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::allocator::{AllocError, ManifoldAllocator};
 use crate::ir::IR7D;
-use crate::jit::{JIT7D, JITError};
+use crate::jit::{JITError, JIT7D};
 use crate::quantum::{Basis, QuantumError, QuantumStateManager, StateID};
 
 const PHI: f64 = 1.618033988749895;

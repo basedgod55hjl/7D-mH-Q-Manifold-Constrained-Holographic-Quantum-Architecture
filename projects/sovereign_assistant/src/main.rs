@@ -45,7 +45,7 @@ fn main() -> Result<()> {
     print_gradient_banner();
 
     // Initialize 7D Neural Context
-    let _neural_ctx = Neural7DContext::new();
+    let mut neural_ctx = Neural7DContext::new();
     println!(
         "   {}",
         "⚡ 7D Neural Interface: ONLINE".truecolor(100, 255, 100)
@@ -99,6 +99,11 @@ fn main() -> Result<()> {
     let prompt_tokens = tokenizer.encode_with_bos(prompt_text)?;
 
     println!("\n{}", "🧠 Thinking...".purple().italic());
+
+    // Inject 7D Manifold Logic
+    let manifold_status = neural_ctx.process_prompt(prompt_text);
+    println!("   {}", manifold_status.truecolor(0, 200, 200).italic());
+
     println!("Prompt: \"{}\"", prompt_text.cyan());
 
     let params = SamplingParams {

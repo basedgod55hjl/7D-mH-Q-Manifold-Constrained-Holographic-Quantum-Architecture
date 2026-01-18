@@ -708,7 +708,7 @@ mod tests {
                 ASTNode::EntropyDecl {
                     name: "Flux".to_string(),
                     source: "VACUUM".to_string(),
-                    modulation: 1.618,
+                    modulation: Box::new(ASTNode::FloatLiteral(1.618)),
                     purity: 0.999,
                     attributes: vec![],
                 },

@@ -8,11 +8,14 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use model_runner::{
+    backend::Backend, sampler::SamplingParams, tokenizer::Crystal7DTokenizer, ModelRunner,
+};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 use tokio::sync::RwLock;
 use tower_http::cors::CorsLayer;
-use tracing::info;
+use tracing::{error, info, warn};
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -32,9 +35,15 @@ pub struct CompletionRequest {
     pub stream: bool,
 }
 
-fn default_max_tokens() -> usize { 256 }
-fn default_temperature() -> f32 { 0.7 }
-fn default_top_p() -> f32 { 0.9 }
+fn default_max_tokens() -> usize {
+    256
+}
+fn default_temperature() -> f32 {
+    0.7
+}
+fn default_top_p() -> f32 {
+    0.9
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompletionResponse {
@@ -116,6 +125,8 @@ pub struct HealthResponse {
 // ═══════════════════════════════════════════════════════════════
 
 pub struct ServerState {
+    pub runner: Option<Arc<ModelRunner>>,
+    pub tokenizer: Option<Arc<Crystal7DTokenizer>>,
     pub models: Vec<ModelInfo>,
     pub request_count: u64,
 }
@@ -123,16 +134,27 @@ pub struct ServerState {
 impl ServerState {
     pub fn new() -> Self {
         Self {
-            models: vec![
-                ModelInfo {
-                    id: "7d-crystal-8b".to_string(),
-                    object: "model".to_string(),
-                    owned_by: "7d-crystal-system".to_string(),
-                    parameters: 8_000_000_000,
-                }
-            ],
+            runner: None,
+            tokenizer: None,
+            models: vec![ModelInfo {
+                id: "7d-crystal-8b".to_string(),
+                object: "model".to_string(),
+                owned_by: "7d-crystal-system".to_string(),
+                parameters: 8_000_000_000,
+            }],
             request_count: 0,
         }
+    }
+
+    pub fn load_model(&mut self, path: &Path) -> anyhow::Result<()> {
+        info!("Loading model from: {}", path.display());
+        let runner = ModelRunner::from_gguf(path, Backend::CPU)?;
+        let tokenizer = Crystal7DTokenizer::new()?;
+
+        self.runner = Some(Arc::new(runner));
+        self.tokenizer = Some(Arc::new(tokenizer));
+        info!("Model loaded successfully");
+        Ok(())
     }
 }
 
@@ -145,22 +167,16 @@ type AppState = Arc<RwLock<ServerState>>;
 async fn health_check(State(state): State<AppState>) -> Json<HealthResponse> {
     let state = state.read().await;
     Json(HealthResponse {
-        status: "healthy".to_string(),
+        status: if state.runner.is_some() {
+            "healthy"
+        } else {
+            "loading"
+        }
+        .to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
-        models_loaded: state.models.len(),
-        gpu_available: check_gpu_available(),
+        models_loaded: if state.runner.is_some() { 1 } else { 0 },
+        gpu_available: false, // CPU for now
     })
-}
-
-fn check_gpu_available() -> bool {
-    #[cfg(feature = "cuda")]
-    {
-        cudarc::driver::CudaDevice::new(0).is_ok()
-    }
-    #[cfg(not(feature = "cuda"))]
-    {
-        false
-    }
 }
 
 async fn list_models(State(state): State<AppState>) -> Json<ModelsResponse> {
@@ -171,62 +187,64 @@ async fn list_models(State(state): State<AppState>) -> Json<ModelsResponse> {
     })
 }
 
-async fn completions(
-    State(state): State<AppState>,
-    Json(req): Json<CompletionRequest>,
-) -> Result<Json<CompletionResponse>, StatusCode> {
-    let mut state = state.write().await;
-    state.request_count += 1;
-    
-    info!("Completion request: model={}, max_tokens={}", req.model, req.max_tokens);
-    
-    // Simulate generation (replace with actual model inference)
-    let generated_text = format!(
-        "[7D Crystal Response to: {}] This is a simulated response. \
-         Manifold projection active. Φ-ratio: 1.618. S² bound: 0.01.",
-        &req.prompt[..req.prompt.len().min(50)]
-    );
-    
-    let prompt_tokens = req.prompt.split_whitespace().count();
-    let completion_tokens = generated_text.split_whitespace().count();
-    
-    Ok(Json(CompletionResponse {
-        id: format!("cmpl-{}", uuid::Uuid::new_v4()),
-        model: req.model,
-        choices: vec![Choice {
-            index: 0,
-            text: generated_text,
-            finish_reason: "stop".to_string(),
-        }],
-        usage: Usage {
-            prompt_tokens,
-            completion_tokens,
-            total_tokens: prompt_tokens + completion_tokens,
-        },
-    }))
-}
-
 async fn chat_completions(
     State(state): State<AppState>,
     Json(req): Json<ChatRequest>,
 ) -> Result<Json<ChatResponse>, StatusCode> {
-    let mut state = state.write().await;
-    state.request_count += 1;
-    
-    let last_message = req.messages.last().map(|m| m.content.clone()).unwrap_or_default();
-    info!("Chat request: model={}, messages={}", req.model, req.messages.len());
-    
-    // Simulate chat response
-    let response_content = format!(
-        "I am the 7D Crystal Sovereign Assistant. You said: '{}'. \
-         I operate in hyperbolic manifold space with Φ-ratio constraints. \
-         How may I assist you further?",
-        &last_message[..last_message.len().min(100)]
-    );
-    
-    let prompt_tokens: usize = req.messages.iter().map(|m| m.content.split_whitespace().count()).sum();
-    let completion_tokens = response_content.split_whitespace().count();
-    
+    let mut state_write = state.write().await;
+    state_write.request_count += 1;
+
+    // Acquire read hooks
+    let runner = state_write.runner.clone();
+    let tokenizer = state_write.tokenizer.clone();
+    drop(state_write); // Release lock
+
+    if runner.is_none() || tokenizer.is_none() {
+        return Err(StatusCode::SERVICE_UNAVAILABLE);
+    }
+    let runner = runner.unwrap();
+    let tokenizer = tokenizer.unwrap();
+
+    // 1. Format Prompt
+    let messages: Vec<(String, String)> = req
+        .messages
+        .iter()
+        .map(|m| (m.role.clone(), m.content.clone()))
+        .collect();
+
+    let prompt_text = tokenizer.apply_chat_template(&messages);
+    let tokens = tokenizer
+        .encode_with_bos(&prompt_text)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    info!("Chat Request: {} tokens", tokens.len());
+
+    // 2. Generate
+    let params = SamplingParams {
+        temperature: req.temperature,
+        top_p: 0.9,
+        top_k: 40,
+        repetition_penalty: 1.1,
+    };
+
+    let generated_tokens = runner
+        .generate(&tokens, req.max_tokens, &params)
+        .map_err(|e| {
+            error!("Generation failed: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    // 3. Decode
+    let response_text = tokenizer
+        .decode(&generated_tokens)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let usage = Usage {
+        prompt_tokens: tokens.len(),
+        completion_tokens: generated_tokens.len(),
+        total_tokens: tokens.len() + generated_tokens.len(),
+    };
+
     Ok(Json(ChatResponse {
         id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
         model: req.model,
@@ -234,14 +252,55 @@ async fn chat_completions(
             index: 0,
             message: Message {
                 role: "assistant".to_string(),
-                content: response_content,
+                content: response_text,
             },
             finish_reason: "stop".to_string(),
         }],
+        usage,
+    }))
+}
+
+// Keep explicit completions endpoint for legacy/testing
+async fn completions(
+    State(state): State<AppState>,
+    Json(req): Json<CompletionRequest>,
+) -> Result<Json<CompletionResponse>, StatusCode> {
+    let mut state_write = state.write().await;
+    state_write.request_count += 1;
+
+    let runner = state_write.runner.clone();
+    let tokenizer = state_write.tokenizer.clone();
+    drop(state_write);
+
+    if runner.is_none() {
+        return Err(StatusCode::SERVICE_UNAVAILABLE);
+    }
+    let runner = runner.unwrap();
+    let tokenizer = tokenizer.unwrap();
+
+    let tokens = tokenizer
+        .encode_with_bos(&req.prompt)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let params = SamplingParams::default();
+    let output_tokens = runner
+        .generate(&tokens, req.max_tokens, &params)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let text = tokenizer.decode(&output_tokens).unwrap_or_default();
+
+    Ok(Json(CompletionResponse {
+        id: format!("cmpl-{}", uuid::Uuid::new_v4()),
+        model: req.model,
+        choices: vec![Choice {
+            index: 0,
+            text,
+            finish_reason: "stop".to_string(),
+        }],
         usage: Usage {
-            prompt_tokens,
-            completion_tokens,
-            total_tokens: prompt_tokens + completion_tokens,
+            prompt_tokens: tokens.len(),
+            completion_tokens: output_tokens.len(),
+            total_tokens: tokens.len() + output_tokens.len(),
         },
     }))
 }
@@ -251,16 +310,42 @@ async fn chat_completions(
 // ═══════════════════════════════════════════════════════════════
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
-    
+
     println!("╔══════════════════════════════════════════════════════════════╗");
     println!("║        🔮 7D CRYSTAL INFERENCE SERVER 🔮                     ║");
     println!("║           Manifold-Constrained LLM Inference                 ║");
     println!("╚══════════════════════════════════════════════════════════════╝");
-    
-    let state: AppState = Arc::new(RwLock::new(ServerState::new()));
-    
+
+    let mut server_state = ServerState::new();
+
+    // Find model automatically
+    let possible_paths = [
+        "DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+        "models/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+        "../DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+    ];
+
+    let mut loaded = false;
+    for p in possible_paths {
+        if Path::new(p).exists() {
+            if let Err(e) = server_state.load_model(Path::new(p)) {
+                error!("Failed to load model at {}: {}", p, e);
+            } else {
+                loaded = true;
+                break;
+            }
+        }
+    }
+
+    if !loaded {
+        warn!("⚠️  NO MODEL FOUND! Server will start in MOCK mode (pending loading).");
+        warn!("   Place 'DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf' in the project root.");
+    }
+
+    let state: AppState = Arc::new(RwLock::new(server_state));
+
     let app = Router::new()
         .route("/health", get(health_check))
         .route("/v1/models", get(list_models))
@@ -268,16 +353,12 @@ async fn main() {
         .route("/v1/chat/completions", post(chat_completions))
         .layer(CorsLayer::permissive())
         .with_state(state);
-    
+
     let addr = "0.0.0.0:8080";
     info!("Starting server on {}", addr);
     println!("\n🚀 Server running at http://{}", addr);
-    println!("   Endpoints:");
-    println!("     GET  /health           - Health check");
-    println!("     GET  /v1/models        - List models");
-    println!("     POST /v1/completions   - Text completion");
-    println!("     POST /v1/chat/completions - Chat completion\n");
-    
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+    Ok(())
 }

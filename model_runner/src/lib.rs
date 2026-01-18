@@ -4,6 +4,7 @@
 pub mod backend;
 pub mod sampler;
 mod tests;
+pub mod tokenizer;
 
 use anyhow::{bail, Context, Result};
 use parking_lot::RwLock;

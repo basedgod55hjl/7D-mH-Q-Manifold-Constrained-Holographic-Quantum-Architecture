@@ -8,3 +8,4 @@ description = "7D Crystal Runtime"
 [dependencies]
 anyhow = "1.0"
 libc = "0.2"
+byteorder = "1.5"

@@ -1,7 +1,7 @@
 // 7D Crystal LLM Builder - Manifold Module
 // Implements 7D Manifold Projection Operators: ⑦ and ->
 
-use crate::{PHI, PHI_BASIS};
+use crate::PHI_BASIS;
 
 /// The ⑦ operator: Projects a vector into the 7D Crystal manifold.
 /// This uses the PHI_BASIS vectors to define the 7 axes of the manifold.

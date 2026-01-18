@@ -37,15 +37,12 @@ impl SamplingParams {
 }
 
 /// Token sampler
-pub struct Sampler {
-    rng: rand::rngs::ThreadRng,
-}
+#[derive(Debug, Clone)]
+pub struct Sampler;
 
 impl Default for Sampler {
     fn default() -> Self {
-        Self {
-            rng: rand::thread_rng(),
-        }
+        Self
     }
 }
 
@@ -107,7 +104,8 @@ impl Sampler {
         }
 
         // Sample from distribution
-        let r: f32 = self.rng.gen();
+        let mut rng = rand::thread_rng();
+        let r: f32 = rng.gen();
         let mut cumsum = 0.0;
         let fallback = probs[0].0;
 
