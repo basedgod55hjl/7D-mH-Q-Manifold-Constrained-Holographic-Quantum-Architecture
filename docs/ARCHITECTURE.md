@@ -107,9 +107,12 @@
 ║  │  │ • Kernels    │  │ • Kernels    │  │ • Kernels    │  │ • Compute    │        │ ║
 ║  │  │ • cuBLAS     │  │ • rocBLAS    │  │ • MPS        │  │ • Shaders    │        │ ║
 ║  │  │ • TensorRT   │  │ • MIOpen     │  │ • BNNS       │  │              │        │ ║
+║  │  │              │  │              │  │              │  │              │        │ ║
 ║  │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘        │ ║
 ║  └──────────────────────────────────────────────────────────────────────────────────┘ ║
 ║                                                                                       ║
+║  ![Poincaré Ball Visualization](images/poincare_ball.svg)                             ║
+║  ![Transformer Layer Diagram](images/transformer_layer.svg)                           ║
 ╚═══════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
