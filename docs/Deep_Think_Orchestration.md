@@ -4,7 +4,7 @@
 
 **Deep Think** is the highest level of the 7D Crystal Universe. It represents the orchestrator's ability to self-reflect, observe its own state through "Vision Blocks," and execute atomic tools to manipulate the manifold.
 
-![Deep Think Orchestration](file:///C:/Users/BASEDGOD/.gemini/antigravity/brain/7ffa479a-5f3a-4e0d-b37f-1dd043041673/deep_think_orchestration_1768203426026.png)
+![Deep Think Orchestration](images/deep_think_orchestration.png)
 
 ## Core Loop Phases
 

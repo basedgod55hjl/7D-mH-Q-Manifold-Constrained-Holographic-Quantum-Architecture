@@ -8,9 +8,11 @@ The **Crystal System** is a holographic, manifold-constrained architecture desig
 
 ### 1. 7D Manifold Projection
 
+### 1. 7D Manifold Projection
+
 The heart of the system is the CUDA-accelerated projection kernel. It maps high-dimensional attention vectors into a stabilized 7D subspace using $S^2$ stability factors and the Golden Ratio ($\phi$).
 
-![7D Manifold Projection](file:///C:/Users/BASEDGOD/.gemini/antigravity/brain/7ffa479a-5f3a-4e0d-b37f-1dd043041673/manifold_projection_7d_1768203395685.png)
+![7D Manifold Projection](images/manifold_projection_7d.png)
 
 ### 2. Holographic Memory
 
@@ -20,7 +22,7 @@ Persistent context is stored as manifold-aware embeddings. This allows the syste
 
 Real-time monitoring ensures peak performance. The system dynamically adjusts `n_gpu_layers` and thread affinity based on instantaneous RAM and VRAM availability.
 
-![Crystal System Architecture](file:///C:/Users/BASEDGOD/.gemini/antigravity/brain/7ffa479a-5f3a-4e0d-b37f-1dd043041673/crystal_sys_arch_1768203410564.png)
+![Crystal System Architecture](images/crystal_sys_arch.png)
 
 ## Technical Specifications
 

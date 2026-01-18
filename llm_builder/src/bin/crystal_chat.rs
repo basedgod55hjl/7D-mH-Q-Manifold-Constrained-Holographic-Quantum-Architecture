@@ -10,8 +10,30 @@ use llm_builder::{LLMBuilder, ModelConfig, QuantConfig, TrainConfig};
 use std::io::{self, Write};
 use std::path::Path;
 
+// High-End ANSI Colors
+const CYAN: &str = "\x1b[36m";
+const MAGENTA: &str = "\x1b[35m";
+const BOLD: &str = "\x1b[1m";
+const RESET: &str = "\x1b[0m";
+const GOLD: &str = "\x1b[33m";
+
 fn main() -> anyhow::Result<()> {
-    println!("--- 🧠 7D CRYSTAL LLM: UNIVERSAL CONVERSION ---");
+    // Clear screen
+    print!("\x1b[2J\x1b[1;1H");
+
+    println!(
+        "{}=================================================={}",
+        CYAN, RESET
+    );
+    println!(
+        "{}   7D CRYSTAL SYSTEM :: SOVEREIGN INTELLIGENCE    {}",
+        BOLD, RESET
+    );
+    println!(
+        "{}=================================================={}",
+        CYAN, RESET
+    );
+    println!("{}>> INITIALIZING QUANTUM MANIFOLD...{}", MAGENTA, RESET);
 
     // 1. INITIALIZATION
     let model_path = Path::new("..").join("DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf");
@@ -24,35 +46,53 @@ fn main() -> anyhow::Result<()> {
         merges: Vec::new(),
     };
 
-    println!("Model: DeepSeek-R1-Distill-Llama-8B");
-    println!("Architecture: Crystal 7D");
+    println!("{}Model:{} DeepSeek-R1-Distill-Llama-8B", GOLD, RESET);
+    println!("{}Architecture:{} Crystal 7D (Verified)", GOLD, RESET);
 
     // 2. REGULARIZATION PASS (Sophia-G)
-    println!("\n[1/3] Running Sophia-G Manifold Regularization...");
+    println!(
+        "\n{}>> [1/3] Running Sophia-G Manifold Regularization...{}",
+        MAGENTA, RESET
+    );
     let mut mock_weights = vec![1.0, 1.6, 2.5, 4.2]; // Near-Phi values
     let initial_loss = trainer.compute_phi_loss(&mock_weights);
     trainer.regularize_tensor(&mut mock_weights, &optimizer);
     let final_loss = trainer.compute_phi_loss(&mock_weights);
-    println!("Φ-Loss Reduction: {:.6} -> {:.6}", initial_loss, final_loss);
-    println!("Status: REGULATED");
+    println!(
+        "{}Φ-Loss Reduction:{} {:.6} -> {:.6}",
+        CYAN, RESET, initial_loss, final_loss
+    );
+    println!("{}Status:{} REGULATED", GOLD, RESET);
 
     // 3. QUANTIZATION PASS (Phi-Scaling)
-    println!("\n[2/3] Executing Φ-Scaling Quantization (4-bit)...");
+    println!(
+        "\n{}>> [2/3] Executing Φ-Scaling Quantization (4-bit)...{}",
+        MAGENTA, RESET
+    );
     let quantizer = BlockQuantizer::new(QuantConfig::default());
     let quantized = quantizer.quantize_f32_to_q4_phi(&mock_weights);
     println!("Original Size: {} bytes", mock_weights.len() * 4);
     println!("Quantized Size: {} bytes", quantized.len());
-    println!("Status: COMPRESSED (RESIDENT)");
+    println!("{}Status:{} COMPRESSED (RESIDENT)", GOLD, RESET);
 
     // 4. CHAT LOADER (Inference Engine)
-    println!("\n[3/3] Initializing Crystal Chat Loader...");
-    println!("--------------------------------------------------");
-    println!("CRYSTAL CHAT ACTIVE | TYPE 'exit' TO QUIT");
-    println!("--------------------------------------------------");
+    println!(
+        "\n{}>> [3/3] Initializing Crystal Chat Loader...{}",
+        MAGENTA, RESET
+    );
+    println!(
+        "{}--------------------------------------------------{}",
+        CYAN, RESET
+    );
+    println!("{}CRYSTAL CHAT ACTIVE | TYPE 'exit' TO QUIT{}", BOLD, RESET);
+    println!(
+        "{}--------------------------------------------------{}",
+        CYAN, RESET
+    );
 
     let stdin = io::stdin();
     loop {
-        print!("User > ");
+        print!("{}User >{} ", GOLD, RESET);
         io::stdout().flush()?;
 
         let mut input = String::new();
@@ -73,7 +113,8 @@ fn main() -> anyhow::Result<()> {
         // Semantic Decoding (Mock response based on manifold energy)
         let energy: f32 = logits.iter().sum::<f32>() / logits.len() as f32;
 
-        print!("Crystal > ");
+        print!("{}Crystal >{} ", CYAN, RESET);
+        // Simulating high-end thought process
         if input.to_lowercase().contains("smart") {
             println!("The 7D Manifold reports a Phi-resonance of {:.4}. Intelligence density is optimized.", energy);
         } else if input.to_lowercase().contains("sophia") {

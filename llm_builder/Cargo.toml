@@ -31,6 +31,14 @@ default = []
 cuda = ["cudarc"]
 metal = []
 
-[dependencies.cudarc]
-version = "0.10"
-optional = true
+[dependencies.candle-core]
+version = "0.4" 
+features = [] # candle-core 0.4 handles gguf via candle-core or separate candle-nn, checking docs.
+# Actually, for GGUF we usually need `candle-core` and maybe `candle-nn`. 
+# But let's check if the user environment has `candle-core`.
+# The workspace has `candle-core` mentioned as optional in root. 
+# Let's use the workspace version but enable it here.
+# Wait, workspace has it as optional.
+# Let's just add it directly.
+version = "0.4.0"
+

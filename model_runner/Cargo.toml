@@ -21,6 +21,7 @@ parking_lot = "0.12"
 crossbeam = "0.8"
 
 llm_builder = { path = "../llm_builder" }
+transformer = { path = "../transformer" }
 
 [features]
 default = []

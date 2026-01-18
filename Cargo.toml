@@ -36,7 +36,7 @@ rayon = "1.8"
 
 # GPU/Compute
 cudarc = { version = "0.10", optional = true }
-candle-core = { version = "0.3.3" }
+candle-core = { version = "0.4", optional = true }
 ort = { version = "2.0", optional = true }
 
 # FFI

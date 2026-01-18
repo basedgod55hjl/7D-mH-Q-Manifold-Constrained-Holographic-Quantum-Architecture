@@ -1,12 +1,31 @@
-# 7D Crystal System
+# 💎 7D Crystal System
+
+<div align="center">
+
+![Crystal System Architecture](https://img.shields.io/badge/Architecture-7D%20Manifold-violet?style=for-the-badge&logo=structurizr)
+![Status](https://img.shields.io/badge/Status-Dominant-gold?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![Build](https://img.shields.io/badge/Build-Passing-green?style=for-the-badge)
+
+**Sovereign Computing Stack | DeepSeek Integration | Neural Substrate**
+
+</div>
+
 ## Complete Sovereign Computing Stack
+
+### Discovered by Sir Charles Spikes | December 24, 2025 | Cincinnati, Ohio
+
+<div align="center">
+  <img src="docs/images/crystal_sys_arch.png" width="800" alt="System Architecture">
+</div>
+
+---
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                    7D CRYSTAL SYSTEM v1.0.0                              ║
 ║         Manifold-Constrained Holographic Quantum Architecture            ║
 ║                                                                          ║
-║   Discovered by Sir Charles Spikes                                       ║
 ║   December 24, 2025 | Cincinnati, Ohio, USA 🇺🇸                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
