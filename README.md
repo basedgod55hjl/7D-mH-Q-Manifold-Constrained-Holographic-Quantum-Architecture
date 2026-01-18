@@ -17,6 +17,11 @@
 
 <div align="center">
   <img src="docs/images/crystal_sys_arch.png" width="800" alt="System Architecture">
+  <br>
+  <img src="docs/images/manifold_projection_7d.png" width="400" alt="Manifold Projection">
+  <img src="docs/images/transformer_layer.svg" width="400" alt="Transformer Layer">
+  <br>
+  <img src="docs/images/poincare_ball.svg" width="300" alt="Poincaré Ball">
 </div>
 
 ---
