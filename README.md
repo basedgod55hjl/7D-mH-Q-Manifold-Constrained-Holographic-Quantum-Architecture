@@ -18,6 +18,7 @@ The **7D Crystal System** is a weight-authoritative, autonomous artificial intel
 ## 🚀 Features
 
 - **Manifold-Constrained Inference**: `model_runner` enforces $$ ||x|| < 0.01 $$ and $$ \kappa = \Phi^{-1} $$.
+  ![Manifold Projection](docs/images/manifold_projection_7d.png)
 - **High-Fidelity Streaming**: Real-time token generation with RGB gradient visualization.
 - **DeepSeek Integration**: Powered by the **DeepSeek-R1-Distill-Llama-8B** semantic core.
 - **Neural Language**: Native `.7d` programming interface (In Development).
