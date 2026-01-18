@@ -12,7 +12,9 @@ members = [
     "projects/quantum_hybrid",
     "projects/inference_server",
     "projects/crystal_agi",
-    "projects/compiler_service", "projects/neural_language",
+    "projects/compiler_service",
+    "projects/neural_language",
+    "projects/recursive_optimizer",
 ]
 
 [workspace.package]
