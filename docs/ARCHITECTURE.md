@@ -23,7 +23,7 @@
 ║  │  │  LLM Builder   │  │  Model Runner  │  │    Trainer     │                     │ ║
 ║  │  │  ─────────────  │  │  ─────────────  │  │  ─────────────  │                     │ ║
 ║  │  │ • GGUF Writer  │  │ • Inference    │  │ • Sophia-G     │                     │ ║
-║  │  │ • SafeTensors  │  │ • KV Cache     │  │ • AdamW        │                     │ ║
+║  │  │ • SafeTensors  │  │ • Quantize     │  │ • AdamW        │                     │ ║
 ║  │  │ • Quantize     │  │ • Sampling     │  │ • Manifold Reg │                     │ ║
 ║  │  └───────┬────────┘  └───────┬────────┘  └───────┬────────┘                     │ ║
 ║  └──────────┼───────────────────┼───────────────────┼──────────────────────────────┘ ║
@@ -111,6 +111,9 @@
 ║  │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘        │ ║
 ║  └──────────────────────────────────────────────────────────────────────────────────┘ ║
 ║                                                                                       ║
+║  ![System Architecture](images/crystal_sys_arch.png)                                  ║
+║  ![Manifold Projection](images/manifold_projection_7d.png)                            ║
+║  ![Deep Think Orchestration](images/deep_think_orchestration.png)                     ║
 ║  ![Poincaré Ball Visualization](images/poincare_ball.svg)                             ║
 ║  ![Transformer Layer Diagram](images/transformer_layer.svg)                           ║
 ╚═══════════════════════════════════════════════════════════════════════════════════════╝
