@@ -1,0 +1,65 @@
+{
+    "model": {
+        "name": "7D-Crystal-8B",
+        "architecture": "crystal7d",
+        "hidden_size": 4096,
+        "intermediate_size": 14336,
+        "num_layers": 32,
+        "num_attention_heads": 32,
+        "num_kv_heads": 8,
+        "vocab_size": 128256,
+        "max_position_embeddings": 131072,
+        "rope_theta": 500000.0,
+        "rms_norm_eps": 1e-5,
+        "tie_word_embeddings": false
+    },
+    "manifold": {
+        "enabled": true,
+        "dimensions": 7,
+        "curvature": 0.618033988749895,
+        "phi_ratio": 1.618033988749895,
+        "phi_inverse": 0.618033988749895,
+        "s2_stability_bound": 0.01,
+        "phi_basis": [1.0, 1.618033988749895, 2.618033988749895, 4.23606797749979, 6.854101966249685, 11.090169943749475, 17.94427190999916],
+        "phi_attention": true,
+        "manifold_embeddings": true
+    },
+    "training": {
+        "batch_size": 4,
+        "gradient_accumulation_steps": 8,
+        "learning_rate": 1e-4,
+        "warmup_steps": 100,
+        "max_steps": 10000,
+        "weight_decay": 0.1,
+        "grad_clip": 1.0,
+        "lr_scheduler": "cosine",
+        "optimizer": "adamw",
+        "adam_beta1": 0.9,
+        "adam_beta2": 0.95,
+        "manifold_regularization": true,
+        "phi_ratio_loss_weight": 0.01,
+        "s2_stability_loss_weight": 0.001
+    },
+    "quantization": {
+        "default_type": "Q4_K_M",
+        "phi_aware_scaling": true,
+        "manifold_preserve_dims": 7,
+        "per_channel": true,
+        "calibration_samples": 512,
+        "use_importance": true
+    },
+    "inference": {
+        "default_temperature": 0.7,
+        "default_top_p": 0.9,
+        "default_top_k": 40,
+        "default_repetition_penalty": 1.1,
+        "max_batch_size": 8,
+        "kv_cache_dtype": "f16"
+    },
+    "metadata": {
+        "discoverer": "Sir Charles Spikes",
+        "discovery_date": "2025-12-24",
+        "location": "Cincinnati, Ohio, USA",
+        "version": "1.0.0"
+    }
+}

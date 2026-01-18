@@ -1,0 +1,130 @@
+section .data
+h: dq 0
+m: dq 0
+input: dq 0
+valid_ratio: dq 0
+projected: dq 0
+v: dq 0
+state: dq 0
+i: dq 0
+target: dq 0
+c: dq 0
+ratio: dq 0
+flux_gen: dq 0
+norm: dq 0
+valid_stability: dq 0
+valid: dq 0
+
+section .text
+extern crystal_config_manifold
+extern crystal_config_crystal
+extern crystal_config_entropy
+extern crystal_yield
+extern crystal_project_7d
+extern crystal_tensor_product_7d
+extern crystal_superpose_7d
+extern crystal_holo_fold_7d
+extern crystal_string_concat
+global _start
+
+compute_core:
+    push rdi ; Param: input
+    pop rax
+    mov [input], rax
+    push rsi ; Param: target
+    pop rax
+    mov [target], rax
+    pop rax
+    mov [norm], rax
+    mov rax, [norm]
+    push rax
+    mov rax, 4609965796441453736
+    push rax ; Φ
+    pop rbx
+    pop rax
+    cqo
+    idiv rbx
+    push rax
+    pop rax
+    mov [ratio], rax
+    mov rax, [ratio]
+    push rax
+    mov rax, 4576918229304087675
+    push rax ; S²
+    pop rax
+    test rax, rax
+    jz L0
+    ret
+    jmp L1
+L0:
+    mov rax, [input]
+    push rax
+    ; push complex value
+    pop rdx ; right
+    pop rcx ; left
+    call crystal_tensor_product_7d
+    push rax
+    ret
+L1:
+
+main:
+    pop rax
+    mov [m], rax
+    pop rax
+    mov [c], rax
+    pop rax
+    mov [flux_gen], rax
+    pop rax
+    mov [h], rax
+    pop rax
+    mov [state], rax
+    pop rax
+    mov [valid_ratio], rax
+    mov rax, 4576918229304087675
+    push rax ; S²
+    pop rax
+    mov [valid_stability], rax
+    mov rax, [valid_ratio]
+    push rax
+    mov rax, [valid_stability]
+    push rax
+    pop rax
+    test rax, rax
+    jz L2
+    push 0
+    ret
+    jmp L3
+L2:
+    push 1
+    ret
+L3:
+
+verify_phi_ratios:
+    push rdx ; Param: state
+    pop rax
+    mov [state], rax
+    push 0
+    pop rax
+    mov [i], rax
+    ret
+
+theorem_PhiRatioPreservation:
+    ; push complex value
+    pop rax
+    mov [v], rax
+    pop rax
+    mov [projected], rax
+    pop rax
+    mov [valid], rax
+    mov rax, [valid]
+    push rax
+    ret
+
+__global_init:
+    ; ConfigManifold: SevenD, dim=7, curv=0.618033988749895
+    call crystal_config_manifold
+    ; ConfigCrystal: HolographicLattice
+    call crystal_config_crystal
+    ; ConfigEntropy: QuantumFlux, mod=1.618033988749895, pur=0.999999
+    call crystal_config_entropy
+

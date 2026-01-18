@@ -1,0 +1,25 @@
+// File: 7D_Full_Adder.7DCRYSTAL
+// 7D Full Adder built from 7D NAND gates
+
+import { NAND_7D } from "./7D_NAND_Gate.7DCRYSTAL";
+
+// 7D Full Adder from 7D NAND gates
+gate FULL_ADDER_7D(A: QuantumBit[7], B: QuantumBit[7], Cin: QuantumBit[7]) 
+    -> (Sum: QuantumBit[7], Cout: QuantumBit[7]) {
+    
+    // Build from 9 7D NAND gates (but in 7D space)
+    let S1 = NAND_7D(A, B)
+    let S2 = NAND_7D(A, S1)
+    let S3 = NAND_7D(S1, B)
+    let S4 = NAND_7D(S2, S3)
+    let S5 = NAND_7D(S4, Cin)
+    let S6 = NAND_7D(S4, S5)
+    let S7 = NAND_7D(S5, Cin)
+    let S8 = NAND_7D(S6, S7)
+    
+    Sum = S8
+    Cout = NAND_7D(S5, S1)
+    
+    // Project to 7D manifold for stability
+    return (project_to_manifold(Sum), project_to_manifold(Cout))
+}

@@ -1,0 +1,14 @@
+section .data
+str_0: db 'The manifold is thinking...', 0
+
+section .text
+global _start
+
+_start:
+    ; Unhandled opcode: Param("prompt")
+    mov rax, str_0
+    push rax ; string pointer
+    ret
+
+_start:
+

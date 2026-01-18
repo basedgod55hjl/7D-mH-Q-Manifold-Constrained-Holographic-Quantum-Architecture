@@ -1,0 +1,4 @@
+fn main() -> i32 {
+    let x = test_func(a: 1, b: 2);
+    return 0;
+}

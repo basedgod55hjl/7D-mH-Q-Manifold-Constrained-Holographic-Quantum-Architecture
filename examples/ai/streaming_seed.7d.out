@@ -1,0 +1,85 @@
+section .data
+v_3: dq 0
+v_0: dq 0
+v_1: dq 0
+v_2: dq 0
+result_2: dq 0
+result_3: dq 0
+v_4: dq 0
+result_4: dq 0
+projected: dq 0
+layer_id: dq 0
+result_0: dq 0
+unfolded: dq 0
+result_1: dq 0
+weight: dq 0
+
+section .text
+extern crystal_config_manifold
+extern crystal_config_crystal
+extern crystal_config_entropy
+extern crystal_yield
+extern crystal_project_7d
+extern crystal_tensor_product_7d
+extern crystal_superpose_7d
+extern crystal_holo_fold_7d
+extern crystal_string_concat
+global _start
+
+seed_injector:
+    push rdi ; Param: weight
+    pop rax
+    mov [weight], rax
+    push rsi ; Param: layer_id
+    pop rax
+    mov [layer_id], rax
+    pop rax
+    mov [projected], rax
+    mov rax, [projected]
+    push rax
+    ; push complex value
+    pop rdx ; right
+    pop rcx ; left
+    call crystal_tensor_product_7d
+    push rax
+    pop rax
+    mov [unfolded], rax
+    mov rax, [unfolded]
+    push rax
+    ret
+
+main:
+    ; push complex value
+    pop rax
+    mov [v_0], rax
+    pop rax
+    mov [result_0], rax
+    ; push complex value
+    pop rax
+    mov [v_1], rax
+    pop rax
+    mov [result_1], rax
+    ; push complex value
+    pop rax
+    mov [v_2], rax
+    pop rax
+    mov [result_2], rax
+    ; push complex value
+    pop rax
+    mov [v_3], rax
+    pop rax
+    mov [result_3], rax
+    ; push complex value
+    pop rax
+    mov [v_4], rax
+    pop rax
+    mov [result_4], rax
+    push 0
+    ret
+
+__global_init:
+    ; ConfigManifold: SeedManifold, dim=7, curv=1.618033988749895
+    call crystal_config_manifold
+    ; ConfigCrystal: SeedLattice
+    call crystal_config_crystal
+

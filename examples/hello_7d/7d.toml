@@ -1,0 +1,8 @@
+[package]
+name = "hello_7d"
+version = "0.1.0"
+authors = ["Sovereign Entity"]
+edition = "2026"
+
+[dependencies]
+crystal_std = { git = "https://github.com/CharlesSpikes/7D_Crystal_Std.git" }

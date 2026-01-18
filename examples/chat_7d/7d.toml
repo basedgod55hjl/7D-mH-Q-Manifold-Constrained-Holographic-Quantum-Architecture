@@ -1,0 +1,8 @@
+[package]
+name = "chat_7d"
+version = "0.1.0"
+authors = ["Sovereign Entity"]
+edition = "2026"
+
+[dependencies]
+# No external 7D deps needed yet

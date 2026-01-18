@@ -1,0 +1,53 @@
+[workspace]
+resolver = "2"
+members = [
+    "compiler",
+    "runtime",
+    "llm_builder",
+    "model_runner",
+    "transformer",
+    "tools/profiler",
+    "benchmarks",
+]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+authors = ["Sir Charles Spikes <basedgod@7dcrystal.io>"]
+license = "MIT"
+repository = "https://github.com/basedgod55hjl/7D-Crystal-System"
+
+[workspace.dependencies]
+# Core dependencies
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Math & ML
+ndarray = "0.15"
+half = { version = "2.3", features = ["std", "serde"] }
+num-complex = "0.4"
+rand = "0.8"
+rayon = "1.8"
+
+# GPU/Compute
+cudarc = { version = "0.10", optional = true }
+candle-core = { version = "0.4", optional = true }
+ort = { version = "2.0", optional = true }
+
+# FFI
+libc = "0.2"
+bindgen = "0.69"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 1

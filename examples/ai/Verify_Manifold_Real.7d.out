@@ -1,0 +1,71 @@
+section .data
+M7: dq 0
+input: dq 0
+n: dq 0
+VerificationLattice: dq 0
+projected: dq 0
+folded: dq 0
+QuantumStats: dq 0
+
+section .text
+extern crystal_config_manifold
+extern crystal_config_crystal
+extern crystal_config_entropy
+extern crystal_yield
+extern crystal_project_7d
+extern crystal_tensor_product_7d
+extern crystal_superpose_7d
+extern crystal_holo_fold_7d
+extern crystal_string_concat
+global _start
+
+verify_main:
+    push rdi ; Param: input
+    pop rax
+    mov [input], rax
+    push rsi ; Param: n
+    pop rax
+    mov [n], rax
+    mov rax, [input]
+    push rax
+    pop rdi ; input
+    call crystal_project_7d
+    push rax
+    mov rax, [M7]
+    push rax
+    pop rsi ; target
+    pop rdi ; input
+    call crystal_project_to_manifold
+    push rax
+    pop rax
+    mov [projected], rax
+    mov rax, [projected]
+    push rax
+    mov rax, [projected]
+    push rax
+    pop rdx ; pattern2
+    pop rcx ; pattern1
+    call crystal_holo_fold_7d
+    push rax
+    pop rax
+    mov [folded], rax
+    push 1
+    ret
+
+__global_init:
+    ; ConfigEntropy: QuantumStats, mod=1.618, pur=0.999
+    call crystal_config_entropy
+    push 0
+    pop rax
+    mov [QuantumStats], rax
+    ; ConfigManifold: M7, dim=7, curv=0.618
+    call crystal_config_manifold
+    push 0
+    pop rax
+    mov [M7], rax
+    ; ConfigCrystal: VerificationLattice
+    call crystal_config_crystal
+    push 0
+    pop rax
+    mov [VerificationLattice], rax
+

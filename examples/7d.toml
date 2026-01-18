@@ -1,0 +1,9 @@
+[package]
+name = "crystal_native"
+version = "0.1.0"
+description = "Native 7D Crystal Core AI"
+authors = ["Sir Charles Spikes
+edition = "2026"
+
+[dependencies]
+# No external deps, this is the core.
