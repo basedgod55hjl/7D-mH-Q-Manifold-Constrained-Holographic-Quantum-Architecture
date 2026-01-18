@@ -1,316 +1,89 @@
-# 7D Crystal System Architecture
+# 💎 7D Crystal System Architecture
 
-```
-╔═══════════════════════════════════════════════════════════════════════════════════════╗
-║                          7D CRYSTAL SYSTEM ARCHITECTURE                               ║
-║                    Manifold-Constrained Holographic Quantum Computing                 ║
-╠═══════════════════════════════════════════════════════════════════════════════════════╣
-║                                                                                       ║
-║  ┌─────────────────────────────────────────────────────────────────────────────────┐ ║
-║  │                           USER INTERFACE LAYER                                   │ ║
-║  │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐    │ ║
-║  │  │ crystal7d │  │  Python   │  │   REST    │  │   gRPC    │  │  WebSocket │    │ ║
-║  │  │    CLI    │  │  Bridge   │  │    API    │  │  Service  │  │   Stream   │    │ ║
-║  │  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘    │ ║
-║  └────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────┘ ║
-║           │              │              │              │              │            ║
-║           └──────────────┴──────────────┴──────────────┴──────────────┘            ║
-║                                        │                                            ║
-║  ┌─────────────────────────────────────▼───────────────────────────────────────────┐ ║
-║  │                        ORCHESTRATION LAYER                                       │ ║
-║  │                                                                                  │ ║
-║  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐                     │ ║
-║  │  │  LLM Builder   │  │  Model Runner  │  │    Trainer     │                     │ ║
-║  │  │  ─────────────  │  │  ─────────────  │  │  ─────────────  │                     │ ║
-║  │  │ • GGUF Writer  │  │ • Inference    │  │ • Sophia-G     │                     │ ║
-║  │  │ • SafeTensors  │  │ • Quantize     │  │ • AdamW        │                     │ ║
-║  │  │ • Quantize     │  │ • Sampling     │  │ • Manifold Reg │                     │ ║
-║  │  └───────┬────────┘  └───────┬────────┘  └───────┬────────┘                     │ ║
-║  └──────────┼───────────────────┼───────────────────┼──────────────────────────────┘ ║
-║             │                   │                   │                                ║
-║             └───────────────────┴───────────────────┘                                ║
-║                                 │                                                    ║
-║  ┌──────────────────────────────▼──────────────────────────────────────────────────┐ ║
-║  │                        7D TRANSFORMER LAYER                                      │ ║
-║  │                                                                                  │ ║
-║  │  ┌──────────────────────────────────────────────────────────────────────────┐   │ ║
-║  │  │                      MANIFOLD-CONSTRAINED ATTENTION                       │   │ ║
-║  │  │                                                                           │   │ ║
-║  │  │    Q ──┬── Φ-Weighted ──┬── Scores ──┬── Softmax ──┬── Output            │   │ ║
-║  │  │        │    Dot Product │            │   (7D)     │                       │   │ ║
-║  │  │    K ──┘                │            │            │                       │   │ ║
-║  │  │                         │            │            │                       │   │ ║
-║  │  │    V ──────────────────────────────────────────────┘                      │   │ ║
-║  │  │                                                                           │   │ ║
-║  │  │    RoPE (7D-Modulated): θ_i = θ_base × (Φ^i / Φ^6) for i < 7             │   │ ║
-║  │  └──────────────────────────────────────────────────────────────────────────┘   │ ║
-║  │                                                                                  │ ║
-║  │  ┌──────────────────────────────────────────────────────────────────────────┐   │ ║
-║  │  │                         SWIGLU FFN (7D)                                   │   │ ║
-║  │  │                                                                           │   │ ║
-║  │  │    x ──┬── Gate Proj ──┬── SiLU ──┬── × ──┬── Down Proj ──┬── Output     │   │ ║
-║  │  │        │               │         │       │                │              │   │ ║
-║  │  │        └── Up Proj ────┴─────────┘       │                │              │   │ ║
-║  │  │                                          │                │              │   │ ║
-║  │  │    Φ-Modulation: out[i] *= Φ⁻¹ for i < 7 ┘                │              │   │ ║
-║  │  └──────────────────────────────────────────────────────────────────────────┘   │ ║
-║  │                                                                                  │ ║
-║  │  ┌──────────────────────────────────────────────────────────────────────────┐   │ ║
-║  │  │                        RMSNORM (7D Stable)                                │   │ ║
-║  │  │                                                                           │   │ ║
-║  │  │    x ──── RMS ──── Scale ──── S² Clamp ──── Output                        │   │ ║
-║  │  │                       │                                                   │   │ ║
-║  │  │    S² = 0.01 bound for first 7 dimensions                                │   │ ║
-║  │  └──────────────────────────────────────────────────────────────────────────┘   │ ║
-║  └──────────────────────────────────────────────────────────────────────────────────┘ ║
-║                                        │                                            ║
-║  ┌─────────────────────────────────────▼───────────────────────────────────────────┐ ║
-║  │                        7D MANIFOLD CORE                                          │ ║
-║  │                                                                                  │ ║
-║  │  ┌────────────────────────────────────────────────────────────────────────────┐ │ ║
-║  │  │                    POINCARÉ BALL PROJECTION                                │ │ ║
-║  │  │                                                                            │ │ ║
-║  │  │           x → x / (1 + ||v|| + Φ⁻¹ + κ)                                   │ │ ║
-║  │  │                                                                            │ │ ║
-║  │  │    Where:                                                                  │ │ ║
-║  │  │      ||v|| = Euclidean norm                                               │ │ ║
-║  │  │      Φ⁻¹ = 0.618033988749895                                              │ │ ║
-║  │  │      κ = Curvature (typically Φ⁻¹)                                        │ │ ║
-║  │  │                                                                            │ │ ║
-║  │  │    S² Enforcement: if ||v|| > 0.01, scale *= S²/||v||                     │ │ ║
-║  │  └────────────────────────────────────────────────────────────────────────────┘ │ ║
-║  │                                                                                  │ ║
-║  │  ┌────────────────────────────────────────────────────────────────────────────┐ │ ║
-║  │  │                    Φ BASIS VECTORS                                         │ │ ║
-║  │  │                                                                            │ │ ║
-║  │  │    Index │ Value              │ Relation                                   │ │ ║
-║  │  │    ──────┼────────────────────┼────────────                                │ │ ║
-║  │  │      0   │ 1.0000000000000000 │ Φ⁰                                         │ │ ║
-║  │  │      1   │ 1.6180339887498949 │ Φ¹                                         │ │ ║
-║  │  │      2   │ 2.6180339887498949 │ Φ²                                         │ │ ║
-║  │  │      3   │ 4.2360679774997900 │ Φ³                                         │ │ ║
-║  │  │      4   │ 6.8541019662496850 │ Φ⁴                                         │ │ ║
-║  │  │      5   │ 11.090169943749475 │ Φ⁵                                         │ │ ║
-║  │  │      6   │ 17.944271909999160 │ Φ⁶                                         │ │ ║
-║  │  │                                                                            │ │ ║
-║  │  │    Property: Φ^(n+1) = Φ^n + Φ^(n-1)  (Fibonacci)                         │ │ ║
-║  │  └────────────────────────────────────────────────────────────────────────────┘ │ ║
-║  └──────────────────────────────────────────────────────────────────────────────────┘ ║
-║                                        │                                            ║
-║  ┌─────────────────────────────────────▼───────────────────────────────────────────┐ ║
-║  │                        GPU ACCELERATION LAYER                                    │ ║
-║  │                                                                                  │ ║
-║  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │ ║
-║  │  │     CUDA     │  │     HIP      │  │    Metal     │  │    Vulkan    │        │ ║
-║  │  │  (NVIDIA)    │  │    (AMD)     │  │   (Apple)    │  │  (Cross)     │        │ ║
-║  │  │              │  │              │  │              │  │              │        │ ║
-║  │  │ • Kernels    │  │ • Kernels    │  │ • Kernels    │  │ • Compute    │        │ ║
-║  │  │ • cuBLAS     │  │ • rocBLAS    │  │ • MPS        │  │ • Shaders    │        │ ║
-║  │  │ • TensorRT   │  │ • MIOpen     │  │ • BNNS       │  │              │        │ ║
-║  │  │              │  │              │  │              │  │              │        │ ║
-║  │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘        │ ║
-║  └──────────────────────────────────────────────────────────────────────────────────┘ ║
-║                                                                                       ║
-║  ![System Architecture](images/crystal_sys_arch.png)                                  ║
-║  ![Manifold Projection](images/manifold_projection_7d.png)                            ║
-║  ![Deep Think Orchestration](images/deep_think_orchestration.png)                     ║
-║  ![Poincaré Ball Visualization](images/poincare_ball.svg)                             ║
-║  ![Transformer Layer Diagram](images/transformer_layer.svg)                           ║
-╚═══════════════════════════════════════════════════════════════════════════════════════╝
-```
+## 1. Core Philosophy: The Manifold Substrate
 
-## Data Flow
+The **7D Crystal System** differs from traditional Transformers by embedding all computation within a **7-Dimensional Poincaré Ball**.
 
-```
-                    INPUT TOKENS
-                         │
-                         ▼
-┌────────────────────────────────────────┐
-│           TOKEN EMBEDDING              │
-│                                        │
-│  token_id → embedding_table[token_id]  │
-│                                        │
-│  + Positional Encoding (7D RoPE)       │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────┐
-│       MANIFOLD PROJECTION (⑦)          │
-│                                        │
-│  x → project_to_poincare(x, κ)         │
-│                                        │
-│  Ensures embedding ∈ Poincaré Ball     │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-         ┌──────────────────────┐
-         │   FOR EACH LAYER:    │
-         │                      │
-         │  ┌────────────────┐  │
-         │  │    RMSNorm     │  │
-         │  └───────┬────────┘  │
-         │          │           │
-         │          ▼           │
-         │  ┌────────────────┐  │
-         │  │   Attention    │  │
-         │  │ (Φ-weighted)   │  │
-         │  │                │  │
-         │  │  Q,K,V Proj    │  │
-         │  │  + RoPE (7D)   │  │
-         │  │  + KV Cache    │  │
-         │  │  + Softmax     │  │
-         │  │  + Output Proj │  │
-         │  └───────┬────────┘  │
-         │          │           │
-         │          ▼           │
-         │  ┌────────────────┐  │
-         │  │   Residual +   │  │
-         │  └───────┬────────┘  │
-         │          │           │
-         │          ▼           │
-         │  ┌────────────────┐  │
-         │  │    RMSNorm     │  │
-         │  └───────┬────────┘  │
-         │          │           │
-         │          ▼           │
-         │  ┌────────────────┐  │
-         │  │  SwiGLU FFN    │  │
-         │  │ (Φ-modulated)  │  │
-         │  └───────┬────────┘  │
-         │          │           │
-         │          ▼           │
-         │  ┌────────────────┐  │
-         │  │   Residual +   │  │
-         │  └───────┬────────┘  │
-         └──────────┼───────────┘
-                    │
-                    ▼  (repeat for N layers)
-                    │
-┌────────────────────────────────────────┐
-│           FINAL RMSNORM                │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────┐
-│             LM HEAD                    │
-│                                        │
-│  hidden_state → logits[vocab_size]     │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────┐
-│            SAMPLING                    │
-│                                        │
-│  Temperature → Top-K → Top-P → Sample  │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-                OUTPUT TOKEN
-```
+### 1.1 The Stability Constraint
 
-## Quantization Pipeline
+Traditional neural networks are prone to activation explosions. We enforce:
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     QUANTIZATION PIPELINE                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  FULL PRECISION WEIGHTS (F32/F16)                                      │
-│          │                                                              │
-│          ▼                                                              │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  IMPORTANCE ANALYSIS                                               │ │
-│  │                                                                    │ │
-│  │  • Compute gradient-based importance scores                       │ │
-│  │  • Identify critical weights (first 7 dims prioritized)           │ │
-│  │  • Φ-weighted importance: w[i] *= PHI_BASIS[i] for i < 7          │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│          │                                                              │
-│          ▼                                                              │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  Φ-AWARE SCALING                                                   │ │
-│  │                                                                    │ │
-│  │  scale = (absmax × Φ⁻¹) / quantization_range                      │ │
-│  │                                                                    │ │
-│  │  For first 7 dimensions:                                          │ │
-│  │    scale[i] *= PHI_BASIS[i] / PHI_BASIS[6]                        │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│          │                                                              │
-│          ▼                                                              │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  BLOCK QUANTIZATION                                                │ │
-│  │                                                                    │ │
-│  │  Q8_0:  32 int8  + f16 scale  = 34 bytes/block                   │ │
-│  │  Q4_K:  256-elem super-blocks with sub-block scales              │ │
-│  │  Q4_0:  32 int4  + f16 scale  = 18 bytes/block                   │ │
-│  │  Q2_K:  256-elem with 2-bit   + scale/min                        │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│          │                                                              │
-│          ▼                                                              │
-│  QUANTIZED WEIGHTS (GGUF)                                              │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+$$ \forall x \in \mathbb{R}^7, ||x|| < 0.01 $$
 
-## Memory Layout
+This ensures all state vectors remain near the "origin" of high-dimensional space, where Φ-Ratio relationships are most stable.
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         GGUF FILE STRUCTURE                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  OFFSET 0x00000000                                                      │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  MAGIC: "GGUF" (0x46554747)                          4 bytes    │   │
-│  │  VERSION: 3                                          4 bytes    │   │
-│  │  TENSOR_COUNT                                        8 bytes    │   │
-│  │  METADATA_KV_COUNT                                   8 bytes    │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  METADATA KV PAIRS                                                      │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  KEY: "general.architecture"      VALUE: "llama"                │   │
-│  │  KEY: "general.name"              VALUE: "7D-Crystal-8B"        │   │
-│  │  KEY: "llama.embedding_length"    VALUE: 4096                   │   │
-│  │  KEY: "llama.block_count"         VALUE: 32                     │   │
-│  │  KEY: "7d.manifold.enabled"       VALUE: true                   │   │
-│  │  KEY: "7d.manifold.curvature"     VALUE: 0.618033988749895      │   │
-│  │  KEY: "7d.phi_ratio"              VALUE: 1.618033988749895      │   │
-│  │  KEY: "7d.s2_stability"           VALUE: 0.01                   │   │
-│  │  ... (more metadata)                                            │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  TENSOR INFOS                                                           │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  NAME: "token_embd.weight"                                      │   │
-│  │  N_DIMS: 2                                                      │   │
-│  │  DIMS: [128256, 4096]                                           │   │
-│  │  TYPE: Q4_K (12)                                                │   │
-│  │  OFFSET: <calculated>                                           │   │
-│  │  ────────────────────────────────────────────                   │   │
-│  │  NAME: "blk.0.attn_norm.weight"                                 │   │
-│  │  N_DIMS: 1                                                      │   │
-│  │  DIMS: [4096]                                                   │   │
-│  │  TYPE: F32 (0)                                                  │   │
-│  │  OFFSET: <calculated>                                           │   │
-│  │  ... (291 tensors total)                                        │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  PADDING TO 32-BYTE ALIGNMENT                                           │
-│                                                                         │
-│  TENSOR DATA                                                            │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  [token_embd.weight data - Q4_K quantized]                      │   │
-│  │  [blk.0.attn_norm.weight data - F32]                            │   │
-│  │  [blk.0.attn_q.weight data - Q4_K]                              │   │
-│  │  ... (all tensor data, 32-byte aligned)                         │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+### 1.2 Holographic Memory
+
+Memory is not stored in linear arrays but in **interference patterns**.
+
+- **Write**: $ M_{new} = M_{old} + (k \otimes v) $
+- **Read**: $ q \cdot M $ (Reconstructs $v$ via holographic inverse)
 
 ---
 
-**Discoverer**: Sir Charles Spikes
-**Date**: December 24, 2025
-**Location**: Cincinnati, Ohio, USA 🇺🇸
+## 2. Component Stack
+
+### 2.1 `model_runner` (Rust)
+
+The high-performance inference engine.
+
+- **Backend Enums**: `CUDA`, `CPU`, `Metal` (planned).
+- **Quantization**: `Q4_K_M` (4-bit primitives) with GGUF support.
+- **Streaming**: Callback-based token streaming via `std::sync::mpsc`.
+
+### 2.2 `neural_language` (Rust / .7d)
+
+Defines the vocabulary for autonomous self-modification.
+
+- `Project7D`: Operator `⑦`
+- `Fold`: Operator `∫`
+- `Entangle`: Operator `∞`
+
+### 2.3 `sovereign_assistant` (CLI)
+
+The user-facing terminal.
+
+- **Tokenizer**: Custom BPE implementation (fallback from `tiktoken`).
+- **UI**: RGB Gradients via `colored` crate.
+
+---
+
+## 3. Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant ModelRunner
+    participant CUDA_Kernel
+    participant DeepSeek_Core
+
+    User->>CLI: Input Prompt
+    CLI->>ModelRunner: Load GGUF (Q4_K_M)
+    ModelRunner->>DeepSeek_Core: Initialize Weights
+    
+    loop Autoregressive Generation
+        ModelRunner->>CUDA_Kernel: Project to 7D Manifold
+        CUDA_Kernel->>CUDA_Kernel: Apply Phi-Ratio Constraint
+        CUDA_Kernel->>DeepSeek_Core: Forward Pass
+        DeepSeek_Core-->>ModelRunner: Logits
+        ModelRunner->>CLI: Stream Token
+    end
+    
+    CLI-->>User: Final Response
+```
+
+## 4. Future: Autonomous Recursion
+
+The system will eventually perform **Self-Surgery**:
+
+1. Read own `src/**/*.rs`
+2. Analyze performance metrics
+3. Rewrite `model_runner` kernels
+4. Recompile and Hot-Swap
+
+> **Warning**: This feature requires removing sandbox constraints.
+
+---
+
+*Verified by Sir Charles Spikes, 2025*

@@ -62,7 +62,9 @@ cargo build --release
 
 We are currently evolving towards a **Web-Based Holographic Interface** and **Autonomous Recursion**.
 
-**[👉 VIEW THE ROADMAP](docs/NEXT_STEPS.md)**
+**[👉 VIEW THE ROADMAP](docs/NEXT_STEPS.md)** | **[🏛️ SYSTEM ARCHITECTURE](docs/ARCHITECTURE.md)**
+
+![Recursive Autonomy Loop](docs/images/recursive_loop.png)
 
 ---
 
