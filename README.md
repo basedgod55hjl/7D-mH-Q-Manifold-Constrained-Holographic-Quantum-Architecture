@@ -24,6 +24,8 @@ The **7D Crystal System** is a weight-authoritative, autonomous artificial intel
 
 ## 💎 System Architecture
 
+![7D Architecture](docs/images/crystal_architecture_diagram.png)
+
 ```mermaid
 graph TD
     A[Sovereign Assistant CLI] -->|Tokens| B(Model Runner)
@@ -51,6 +53,7 @@ cargo build --release
 ./target/release/sovereign.exe
 ```
 
+![Sovereign Interface](docs/images/sovereign_cli_screenshot.png)
 *Experience the High-Fidelity Gradient UI and Real-Time Streaming.*
 
 ## 🗺️ Roadmap & Next Steps
