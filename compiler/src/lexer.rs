@@ -1,43 +1,49 @@
 // File: lexer.rs
-// 7D Crystal Lexer - Tokenization of 7D-MHQL source code
-// Discovered by Sir Charles Spikes, December 24, 2025
+// 7D Crystal Lexer - High-performance tokenization of 7D-MHQL source code.
+// Licensed under the MIT License.
+// Discovered by Sir Charles Spikes | December 24, 2025 | Cincinnati, Ohio, USA 🇺🇸
 
+use crate::errors::{CrystalError, CrystalResult, ErrorCode};
 use std::fmt;
 
-/// Token types in 7D Crystal language
+/// Token types in 7D-MHQL.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords - Declarations
-    Manifold,
-    Crystal,
-    Hologram,
-    Quantum,
-    Entropy,
-    Theorem,
-    Proof,
-    Module,
-    Import,
-    Export,
+    // ═══════════════════════════════════════════════════════════════════════════
+    // KEYWORDS
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // Keywords - Control Flow
-    If,
-    Else,
-    While,
-    For,
-    Match,
-    Break,
-    Continue,
-    Return,
-    Yield,
+    // Declarations
+    Manifold, // manifold
+    Crystal,  // crystal
+    Hologram, // hologram
+    Quantum,  // quantum
+    Entropy,  // entropy
+    Theorem,  // theorem
+    Proof,    // proof
+    Module,   // module
+    Import,   // import
+    Export,   // export
 
-    // Keywords - Qualifiers
-    Sovereignty,   // @sovereignty
+    // Control Flow
+    If,       // if
+    Else,     // else
+    While,    // while
+    For,      // for
+    Match,    // match
+    Break,    // break
+    Continue, // continue
+    Return,   // return
+    Yield,    // yield
+
+    // Sovereignty & Qualifiers
+    Sovereignty,   // sovereignty
     QuantumCortex, // quantum cortex
     QuantumLogic,  // quantum logic
-    ManifoldConst, // manifold constant
-    Let,
-    Mut,
-    Fn,
+    Constant,      // manifold constant
+    Let,           // let
+    Mut,           // mut
+    Fn,            // fn
 
     // Primitive Types
     I8,
@@ -50,9 +56,9 @@ pub enum Token {
     U64,
     F32,
     F64,
-    Bool,
+    Bool, // bool
 
-    // 7D Types
+    // 7D Specific Types
     HyperbolicReal,
     Vector7D,
     Matrix7D,
@@ -65,20 +71,28 @@ pub enum Token {
     WaveFunction,
     Consciousness,
 
-    // Operators - Mathematical
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OPERATORS & SYMBOLS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Mathematical
     Plus,    // +
     Minus,   // -
     Star,    // *
     Slash,   // /
     Percent, // %
+    PlusEq,  // +=
+    MinusEq, // -=
+    StarEq,  // *=
+    SlashEq, // /=
 
-    // Operators - 7D Specific
+    // 7D Sacred Operators
     TensorProduct, // ⊗
     Superposition, // ⊕
     HoloFold,      // ⊙
     Project7D,     // ⑦
 
-    // Operators - Comparison
+    // Comparisons
     Eq, // ==
     Ne, // !=
     Lt, // <
@@ -86,13 +100,15 @@ pub enum Token {
     Le, // <=
     Ge, // >=
 
-    // Operators - Logical
+    // Logical
     And, // &&
     Or,  // ||
     Not, // !
 
-    // Assignment
-    Assign, // =
+    // Assignment & Flow
+    Assign,   // =
+    Arrow,    // ->
+    FatArrow, // =>
 
     // Delimiters
     LeftParen,    // (
@@ -106,19 +122,22 @@ pub enum Token {
     Dot,          // .
     Colon,        // :
     ColonColon,   // ::
-    Arrow,        // ->
-    FatArrow,     // =>
+    At,           // @
     Ampersand,    // &
 
-    // Constants
-    PhiConstant,    // Φ
-    PhiInverse,     // Φ⁻¹
-    S2Constant,     // S²
-    Infinity,       // ∞
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONSTANTS & LITERALS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Sacred Constants
+    PhiConstant, // Φ
+    PhiInverse,  // Φ⁻¹
+    S2Constant,  // S²
+    Infinite,    // ∞
+    // ∞
     LambdaConstant, // Λ
     PsiConstant,    // Ψ
-    Infinite,
-    Eternity,
+    Eternity,       // eternity
 
     // Literals
     IntLiteral(i64),
@@ -128,213 +147,106 @@ pub enum Token {
 
     // Identifiers
     Identifier(String),
+    Attribute(String),
 
-    // Attributes
-    Attribute(String), // @sovereignty, @manifold, etc.
-
-    // Special
+    // Meta
     Eof,
-    Unknown(char),
 }
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::Manifold => write!(f, "manifold"),
-            Token::Quantum => write!(f, "quantum"),
+            Token::Identifier(s) => write!(f, "{}", s),
+            Token::IntLiteral(n) => write!(f, "{}", n),
+            Token::FloatLiteral(n) => write!(f, "{}", n),
             Token::PhiConstant => write!(f, "Φ"),
-            Token::Identifier(s) => write!(f, "identifier({})", s),
-            Token::IntLiteral(n) => write!(f, "int({})", n),
-            Token::FloatLiteral(n) => write!(f, "float({})", n),
+            Token::PhiInverse => write!(f, "Φ⁻¹"),
+            Token::Eof => write!(f, "EOF"),
             _ => write!(f, "{:?}", self),
         }
     }
 }
 
-/// Lexer for 7D Crystal language
+/// Lexer state machine.
 pub struct Lexer {
     input: Vec<char>,
     position: usize,
-    current_char: Option<char>,
     line: usize,
     column: usize,
+    file_name: String,
 }
 
 impl Lexer {
-    pub fn new(input: String) -> Self {
-        let chars: Vec<char> = input.chars().collect();
-        let current_char = chars.get(0).copied();
-
-        Lexer {
-            input: chars,
+    pub fn new(source: &str) -> Self {
+        Self {
+            input: source.chars().collect(),
             position: 0,
-            current_char,
             line: 1,
             column: 1,
+            file_name: "source.7d".to_string(),
         }
     }
 
-    /// Advance to next character
-    fn advance(&mut self) {
-        if self.current_char == Some('\n') {
-            self.line += 1;
-            self.column = 1;
-        } else {
-            self.column += 1;
-        }
-
-        self.position += 1;
-        self.current_char = self.input.get(self.position).copied();
+    pub fn with_filename(mut self, name: &str) -> Self {
+        self.file_name = name.to_string();
+        self
     }
 
-    /// Peek at next character without advancing
+    fn current(&self) -> Option<char> {
+        self.input.get(self.position).copied()
+    }
+
     fn peek(&self, offset: usize) -> Option<char> {
         self.input.get(self.position + offset).copied()
     }
 
-    /// Skip whitespace
+    fn advance(&mut self) -> Option<char> {
+        let ch = self.current();
+        if let Some(c) = ch {
+            if c == '\n' {
+                self.line += 1;
+                self.column = 1;
+            } else {
+                self.column += 1;
+            }
+            self.position += 1;
+        }
+        ch
+    }
+
     fn skip_whitespace(&mut self) {
-        while let Some(ch) = self.current_char {
+        while let Some(ch) = self.current() {
             if ch.is_whitespace() {
                 self.advance();
-            } else {
-                break;
-            }
-        }
-    }
-
-    /// Skip single-line comment (//)
-    fn skip_comment(&mut self) {
-        while let Some(ch) = self.current_char {
-            if ch == '\n' {
-                break;
-            }
-            self.advance();
-        }
-    }
-
-    /// Skip multi-line comment (/* ... */)
-    fn skip_multiline_comment(&mut self) {
-        self.advance(); // Skip '/'
-        self.advance(); // Skip '*'
-
-        while let Some(ch) = self.current_char {
-            if ch == '*' && self.peek(1) == Some('/') {
-                self.advance(); // Skip '*'
-                self.advance(); // Skip '/'
-                break;
-            }
-            self.advance();
-        }
-    }
-
-    /// Read number (integer or float)
-    fn read_number(&mut self) -> Token {
-        let mut num_str = String::new();
-        let mut is_float = false;
-
-        // Handle hex (0x), binary (0b)
-        if self.current_char == Some('0') {
-            if self.peek(1) == Some('x') || self.peek(1) == Some('X') {
-                return self.read_hex();
-            } else if self.peek(1) == Some('b') || self.peek(1) == Some('B') {
-                return self.read_binary();
-            }
-        }
-
-        // Read digits
-        while let Some(ch) = self.current_char {
-            if ch.is_numeric() || ch == '.' || ch == '_' {
-                if ch == '.' {
-                    if is_float {
-                        break; // Second dot, stop
+            } else if ch == '/' && self.peek(1) == Some('/') {
+                // Single line comment
+                while let Some(c) = self.current() {
+                    if c == '\n' {
+                        break;
                     }
-                    is_float = true;
-                }
-                if ch != '_' {
-                    num_str.push(ch);
-                }
-                self.advance();
-            } else {
-                break;
-            }
-        }
-
-        // Handle scientific notation
-        if let Some('e') | Some('E') = self.current_char {
-            is_float = true;
-            num_str.push('e');
-            self.advance();
-
-            if let Some('+') | Some('-') = self.current_char {
-                num_str.push(self.current_char.unwrap());
-                self.advance();
-            }
-
-            while let Some(ch) = self.current_char {
-                if ch.is_numeric() {
-                    num_str.push(ch);
                     self.advance();
-                } else {
-                    break;
                 }
-            }
-        }
-
-        if is_float {
-            Token::FloatLiteral(num_str.parse().unwrap_or(0.0))
-        } else {
-            Token::IntLiteral(num_str.parse().unwrap_or(0))
-        }
-    }
-
-    /// Read hexadecimal number
-    fn read_hex(&mut self) -> Token {
-        self.advance(); // Skip '0'
-        self.advance(); // Skip 'x'
-
-        let mut hex_str = String::from("0x");
-        while let Some(ch) = self.current_char {
-            if ch.is_ascii_hexdigit() || ch == '_' {
-                if ch != '_' {
-                    hex_str.push(ch);
-                }
+            } else if ch == '/' && self.peek(1) == Some('*') {
+                // Multi-line comment
                 self.advance();
+                self.advance();
+                while let Some(c) = self.current() {
+                    if c == '*' && self.peek(1) == Some('/') {
+                        self.advance();
+                        self.advance();
+                        break;
+                    }
+                    self.advance();
+                }
             } else {
                 break;
             }
         }
-
-        let value = i64::from_str_radix(&hex_str[2..], 16).unwrap_or(0);
-        Token::IntLiteral(value)
     }
 
-    /// Read binary number
-    fn read_binary(&mut self) -> Token {
-        self.advance(); // Skip '0'
-        self.advance(); // Skip 'b'
-
-        let mut bin_str = String::new();
-        while let Some(ch) = self.current_char {
-            if ch == '0' || ch == '1' || ch == '_' {
-                if ch != '_' {
-                    bin_str.push(ch);
-                }
-                self.advance();
-            } else {
-                break;
-            }
-        }
-
-        let value = i64::from_str_radix(&bin_str, 2).unwrap_or(0);
-        Token::IntLiteral(value)
-    }
-
-    /// Read identifier or keyword
     fn read_identifier(&mut self) -> Token {
         let mut ident = String::new();
-
-        while let Some(ch) = self.current_char {
+        while let Some(ch) = self.current() {
             if ch.is_alphanumeric() || ch == '_' {
                 ident.push(ch);
                 self.advance();
@@ -343,26 +255,16 @@ impl Lexer {
             }
         }
 
-        // Check for keywords
-        self.keyword_or_identifier(ident)
-    }
-
-    /// Convert identifier to keyword if applicable
-    fn keyword_or_identifier(&self, ident: String) -> Token {
         match ident.as_str() {
-            // Declarations
             "manifold" => Token::Manifold,
             "crystal" => Token::Crystal,
             "hologram" => Token::Hologram,
-            "quantum" => Token::Quantum,
             "entropy" => Token::Entropy,
             "theorem" => Token::Theorem,
             "proof" => Token::Proof,
             "module" => Token::Module,
             "import" => Token::Import,
             "export" => Token::Export,
-
-            // Control flow
             "if" => Token::If,
             "else" => Token::Else,
             "while" => Token::While,
@@ -372,20 +274,39 @@ impl Lexer {
             "continue" => Token::Continue,
             "return" => Token::Return,
             "yield" => Token::Yield,
-
-            // Sovereignty and quantum
             "sovereignty" => Token::Sovereignty,
+            "quantum" => {
+                let saved_pos = self.position;
+                let saved_line = self.line;
+                let saved_col = self.column;
 
-            // Qualifiers
-            "cortex" => Token::QuantumCortex,
-            "logic" => Token::QuantumLogic,
-            "constant" => Token::ManifoldConst,
+                self.skip_whitespace();
+                let mut next_ident = String::new();
+                while let Some(ch) = self.current() {
+                    if ch.is_alphanumeric() || ch == '_' {
+                        next_ident.push(ch);
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
 
+                match next_ident.as_str() {
+                    "cortex" => Token::QuantumCortex,
+                    "logic" => Token::QuantumLogic,
+                    _ => {
+                        // Backtrack
+                        self.position = saved_pos;
+                        self.line = saved_line;
+                        self.column = saved_col;
+                        Token::Quantum
+                    }
+                }
+            }
+            "constant" => Token::Constant,
             "let" => Token::Let,
             "mut" => Token::Mut,
             "fn" => Token::Fn,
-
-            // Primitive types
             "i8" => Token::I8,
             "i16" => Token::I16,
             "i32" => Token::I32,
@@ -397,8 +318,6 @@ impl Lexer {
             "f32" => Token::F32,
             "f64" => Token::F64,
             "bool" => Token::Bool,
-
-            // 7D types
             "HyperbolicReal" => Token::HyperbolicReal,
             "Vector7D" => Token::Vector7D,
             "Matrix7D" => Token::Matrix7D,
@@ -409,341 +328,380 @@ impl Lexer {
             "QuantumState" => Token::QuantumState,
             "Pattern" => Token::Pattern,
             "WaveFunction" => Token::WaveFunction,
-
-            // Boolean literals
             "consciousness" => Token::Consciousness,
-            "Consciousness" => Token::Consciousness,
-            "Proof" => Token::Proof,
-            "INFINITE" => Token::Infinite,
-            "ETERNITY" => Token::Eternity,
+            "eternity" => Token::Eternity,
             "true" => Token::BoolLiteral(true),
             "false" => Token::BoolLiteral(false),
-
             _ => Token::Identifier(ident),
         }
     }
 
-    /// Read string literal
-    fn read_string(&mut self) -> Token {
-        self.advance(); // Skip opening quote
+    fn read_number(&mut self) -> CrystalResult<Token> {
+        let mut num_str = String::new();
+        let mut is_float = false;
 
-        let mut string = String::new();
-
-        while let Some(ch) = self.current_char {
-            if ch == '"' {
-                self.advance(); // Skip closing quote
-                break;
-            } else if ch == '\\' {
-                // Handle escape sequences
-                self.advance();
-                if let Some(escaped) = self.current_char {
-                    let ch = match escaped {
-                        'n' => '\n',
-                        't' => '\t',
-                        'r' => '\r',
-                        '\\' => '\\',
-                        '"' => '"',
-                        _ => escaped,
-                    };
-                    string.push(ch);
+        // Handle hex/binary prefixes
+        if self.current() == Some('0') {
+            match self.peek(1) {
+                Some('x') => {
                     self.advance();
-                }
-            } else {
-                string.push(ch);
-                self.advance();
-            }
-        }
-
-        Token::StringLiteral(string)
-    }
-
-    /// Read attribute (@sovereignty, @manifold, etc.)
-    fn read_attribute(&mut self) -> Token {
-        self.advance(); // Skip '@'
-
-        let mut attr = String::new();
-        while let Some(ch) = self.current_char {
-            if ch.is_alphanumeric() || ch == '_' {
-                attr.push(ch);
-                self.advance();
-            } else {
-                break;
-            }
-        }
-
-        Token::Attribute(attr)
-    }
-
-    /// Get next token
-    pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
-
-        // Handle comments
-        if self.current_char == Some('/') {
-            if self.peek(1) == Some('/') {
-                self.skip_comment();
-                return self.next_token();
-            } else if self.peek(1) == Some('*') {
-                self.skip_multiline_comment();
-                return self.next_token();
-            }
-        }
-
-        match self.current_char {
-            None => Token::Eof,
-
-            // String literals
-            Some('"') => self.read_string(),
-
-            // Attributes
-            Some('@') => self.read_attribute(),
-
-            // Mathematical operators (UTF-8 symbols)
-            Some('⊗') => {
-                self.advance();
-                Token::TensorProduct
-            }
-            Some('⊕') => {
-                self.advance();
-                Token::Superposition
-            }
-            Some('⊙') => {
-                self.advance();
-                Token::HoloFold
-            }
-            Some('⑦') => {
-                self.advance();
-                Token::Project7D
-            }
-            Some('Φ') => {
-                self.advance();
-                // Check for Φ⁻¹
-                if self.current_char == Some('⁻') && self.peek(1) == Some('¹') {
-                    self.advance(); // Skip ⁻
-                    self.advance(); // Skip ¹
-                    Token::PhiInverse
-                } else {
-                    Token::PhiConstant
-                }
-            }
-            Some('S') if self.peek(1) == Some('²') => {
-                self.advance(); // Skip 'S'
-                self.advance(); // Skip '²'
-                Token::S2Constant
-            }
-            Some('∞') => {
-                self.advance();
-                Token::Infinity
-            }
-            Some('Λ') => {
-                self.advance();
-                Token::LambdaConstant
-            }
-            Some('Ψ') => {
-                self.advance();
-                Token::PsiConstant
-            }
-
-            // Single-character tokens
-            Some('+') => {
-                self.advance();
-                Token::Plus
-            }
-            Some('-') => {
-                self.advance();
-                if self.current_char == Some('>') {
                     self.advance();
-                    Token::Arrow
-                } else {
-                    Token::Minus
-                }
-            }
-            Some('*') => {
-                self.advance();
-                Token::Star
-            }
-            Some('/') => {
-                self.advance();
-                Token::Slash
-            }
-            Some('%') => {
-                self.advance();
-                Token::Percent
-            }
-            Some('(') => {
-                self.advance();
-                Token::LeftParen
-            }
-            Some(')') => {
-                self.advance();
-                Token::RightParen
-            }
-            Some('{') => {
-                self.advance();
-                Token::LeftBrace
-            }
-            Some('}') => {
-                self.advance();
-                Token::RightBrace
-            }
-            Some('[') => {
-                self.advance();
-                Token::LeftBracket
-            }
-            Some(']') => {
-                self.advance();
-                Token::RightBracket
-            }
-            Some(';') => {
-                self.advance();
-                Token::Semicolon
-            }
-            Some(',') => {
-                self.advance();
-                Token::Comma
-            }
-            Some('.') => {
-                self.advance();
-                Token::Dot
-            }
-
-            // Two-character operators
-            Some('=') => {
-                self.advance();
-                if self.current_char == Some('=') {
-                    self.advance();
-                    Token::Eq
-                } else if self.current_char == Some('>') {
-                    self.advance();
-                    Token::FatArrow
-                } else {
-                    Token::Assign
-                }
-            }
-            Some('!') => {
-                self.advance();
-                if self.current_char == Some('=') {
-                    self.advance();
-                    Token::Ne
-                } else {
-                    Token::Not
-                }
-            }
-            Some('<') => {
-                self.advance();
-                if self.current_char == Some('=') {
-                    self.advance();
-                    Token::Le
-                } else {
-                    Token::Lt
-                }
-            }
-            Some('>') => {
-                self.advance();
-                if self.current_char == Some('=') {
-                    self.advance();
-                    Token::Ge
-                } else {
-                    Token::Gt
-                }
-            }
-            Some('&') => {
-                self.advance();
-                if self.current_char == Some('&') {
-                    self.advance();
-                    Token::And
-                } else {
-                    Token::Ampersand
-                }
-            }
-            Some('|') => {
-                self.advance();
-                if self.current_char == Some('|') {
-                    self.advance();
-                    Token::Or
-                } else {
-                    Token::Unknown('|')
-                }
-            }
-            Some(':') => {
-                self.advance();
-                if self.current_char == Some(':') {
-                    self.advance();
-                    Token::ColonColon
-                } else {
-                    Token::Colon
-                }
-            }
-
-            // Generic Number fallback (must be after S²)
-            Some(ch) if ch.is_numeric() => {
-                let mut i = 0;
-                let mut is_pure_number = true;
-                let mut is_hex = false;
-
-                if ch == '0' {
-                    match self.peek(1) {
-                        Some('x') | Some('X') => is_hex = true,
-                        _ => {}
-                    }
-                }
-
-                while let Some(next) = self.peek(i) {
-                    if next.is_whitespace() || "()[]{};,+-*/%&|=<>!@".contains(next) {
-                        break;
-                    }
-                    if next.is_alphabetic() {
-                        if is_hex && next.is_ascii_hexdigit() {
-                            // Hex digit is fine
-                        } else if i == 1
-                            && (next == 'x' || next == 'X' || next == 'b' || next == 'B')
-                            && self.peek(0) == Some('0')
-                        {
-                            // Prefix is fine
+                    let mut hex = String::new();
+                    while let Some(ch) = self.current() {
+                        if ch.is_ascii_hexdigit() || ch == '_' {
+                            if ch != '_' {
+                                hex.push(ch);
+                            }
+                            self.advance();
                         } else {
-                            is_pure_number = false;
                             break;
                         }
                     }
-                    i += 1;
+                    return Ok(Token::IntLiteral(
+                        i64::from_str_radix(&hex, 16).unwrap_or(0),
+                    ));
                 }
-
-                if is_pure_number {
-                    self.read_number()
-                } else {
-                    self.read_identifier()
+                Some('b') => {
+                    self.advance();
+                    self.advance();
+                    let mut bin = String::new();
+                    while let Some(ch) = self.current() {
+                        if ch == '0' || ch == '1' || ch == '_' {
+                            if ch != '_' {
+                                bin.push(ch);
+                            }
+                            self.advance();
+                        } else {
+                            break;
+                        }
+                    }
+                    return Ok(Token::IntLiteral(i64::from_str_radix(&bin, 2).unwrap_or(0)));
                 }
-            }
-
-            // Generic Identifier fallback (must be after Φ)
-            Some(ch) if ch.is_alphabetic() || ch == '_' => self.read_identifier(),
-
-            Some(ch) => {
-                self.advance();
-                Token::Unknown(ch)
+                _ => {}
             }
         }
-    }
 
-    /// Tokenize entire input
-    pub fn tokenize(&mut self) -> Vec<Token> {
-        let mut tokens = Vec::new();
-
-        loop {
-            let token = self.next_token();
-            if token == Token::Eof {
-                tokens.push(token);
+        while let Some(ch) = self.current() {
+            if ch.is_ascii_digit() || ch == '_' {
+                if ch != '_' {
+                    num_str.push(ch);
+                }
+                self.advance();
+            } else if ch == '.' && !is_float && self.peek(1).map_or(false, |c| c.is_ascii_digit()) {
+                is_float = true;
+                num_str.push('.');
+                self.advance();
+            } else {
                 break;
             }
-            tokens.push(token);
         }
 
-        tokens
+        if is_float {
+            match num_str.parse::<f64>() {
+                Ok(f) => Ok(Token::FloatLiteral(f)),
+                Err(_) => Err(CrystalError::new(
+                    ErrorCode::InvalidNumericLiteral,
+                    &format!("Invalid float: {}", num_str),
+                )
+                .at(&self.file_name, self.line, self.column)),
+            }
+        } else {
+            match num_str.parse::<i64>() {
+                Ok(i) => Ok(Token::IntLiteral(i)),
+                Err(_) => Err(CrystalError::new(
+                    ErrorCode::InvalidNumericLiteral,
+                    &format!("Invalid integer: {}", num_str),
+                )
+                .at(&self.file_name, self.line, self.column)),
+            }
+        }
     }
 
-    /// Get current position info
-    pub fn position(&self) -> (usize, usize) {
-        (self.line, self.column)
+    fn read_string(&mut self) -> CrystalResult<Token> {
+        self.advance(); // Skip "
+        let mut s = String::new();
+        while let Some(ch) = self.advance() {
+            if ch == '"' {
+                return Ok(Token::StringLiteral(s));
+            }
+            if ch == '\\' {
+                match self.advance() {
+                    Some('n') => s.push('\n'),
+                    Some('t') => s.push('\t'),
+                    Some('\\') => s.push('\\'),
+                    Some('"') => s.push('"'),
+                    Some(c) => s.push(c),
+                    None => break,
+                }
+            } else {
+                s.push(ch);
+            }
+        }
+        Err(
+            CrystalError::new(ErrorCode::UnterminatedString, "String literal not closed").at(
+                &self.file_name,
+                self.line,
+                self.column,
+            ),
+        )
+    }
+
+    pub fn next_token(&mut self) -> CrystalResult<Token> {
+        self.skip_whitespace();
+
+        let start_line = self.line;
+        let start_col = self.column;
+
+        let ch = match self.current() {
+            None => return Ok(Token::Eof),
+            Some(c) => c,
+        };
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SACRED UTF-8 HANDLING
+        // ══════════════════════════════════════════════════════════════════════════
+
+        match ch {
+            '⊗' => {
+                self.advance();
+                return Ok(Token::TensorProduct);
+            }
+            '⊕' => {
+                self.advance();
+                return Ok(Token::Superposition);
+            }
+            '⊙' => {
+                self.advance();
+                return Ok(Token::HoloFold);
+            }
+            '⑦' => {
+                self.advance();
+                return Ok(Token::Project7D);
+            }
+            'Φ' => {
+                self.advance();
+                if self.current() == Some('⁻') && self.peek(1) == Some('¹') {
+                    self.advance();
+                    self.advance();
+                    return Ok(Token::PhiInverse);
+                }
+                return Ok(Token::PhiConstant);
+            }
+            '∞' => {
+                self.advance();
+                return Ok(Token::Infinite);
+            }
+            'Λ' => {
+                self.advance();
+                return Ok(Token::LambdaConstant);
+            }
+            'Ψ' => {
+                self.advance();
+                return Ok(Token::PsiConstant);
+            }
+            'S' if self.peek(1) == Some('²') => {
+                self.advance();
+                self.advance();
+                return Ok(Token::S2Constant);
+            }
+            _ => {}
+        }
+
+        // Standard Operators & Symbols
+        match ch {
+            '(' => {
+                self.advance();
+                Ok(Token::LeftParen)
+            }
+            ')' => {
+                self.advance();
+                Ok(Token::RightParen)
+            }
+            '{' => {
+                self.advance();
+                Ok(Token::LeftBrace)
+            }
+            '}' => {
+                self.advance();
+                Ok(Token::RightBrace)
+            }
+            '[' => {
+                self.advance();
+                Ok(Token::LeftBracket)
+            }
+            ']' => {
+                self.advance();
+                Ok(Token::RightBracket)
+            }
+            ';' => {
+                self.advance();
+                Ok(Token::Semicolon)
+            }
+            ',' => {
+                self.advance();
+                Ok(Token::Comma)
+            }
+            '.' => {
+                self.advance();
+                Ok(Token::Dot)
+            }
+            ':' => {
+                self.advance();
+                if self.current() == Some(':') {
+                    self.advance();
+                    Ok(Token::ColonColon)
+                } else {
+                    Ok(Token::Colon)
+                }
+            }
+            '@' => {
+                self.advance();
+                if let Some(ch) = self.current() {
+                    if ch.is_alphabetic() || ch == '_' {
+                        let ident = match self.read_identifier() {
+                            Token::Identifier(s) => s,
+                            t => format!("{:?}", t).to_lowercase(),
+                        };
+                        return Ok(Token::Attribute(ident));
+                    }
+                }
+                Ok(Token::At)
+            }
+            '&' => {
+                self.advance();
+                if self.current() == Some('&') {
+                    self.advance();
+                    Ok(Token::And)
+                } else {
+                    Ok(Token::Ampersand)
+                }
+            }
+            '|' => {
+                self.advance();
+                if self.current() == Some('|') {
+                    self.advance();
+                    Ok(Token::Or)
+                } else {
+                    Err(
+                        CrystalError::new(ErrorCode::UnexpectedChar, "Invalid character '|'").at(
+                            &self.file_name,
+                            start_line,
+                            start_col,
+                        ),
+                    )
+                }
+            }
+            '=' => {
+                self.advance();
+                match self.current() {
+                    Some('=') => {
+                        self.advance();
+                        Ok(Token::Eq)
+                    }
+                    Some('>') => {
+                        self.advance();
+                        Ok(Token::FatArrow)
+                    }
+                    _ => Ok(Token::Assign),
+                }
+            }
+            '!' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::Ne)
+                } else {
+                    Ok(Token::Not)
+                }
+            }
+            '<' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::Le)
+                } else {
+                    Ok(Token::Lt)
+                }
+            }
+            '>' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::Ge)
+                } else {
+                    Ok(Token::Gt)
+                }
+            }
+            '+' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::PlusEq)
+                } else {
+                    Ok(Token::Plus)
+                }
+            }
+            '-' => {
+                self.advance();
+                match self.current() {
+                    Some('=') => {
+                        self.advance();
+                        Ok(Token::MinusEq)
+                    }
+                    Some('>') => {
+                        self.advance();
+                        Ok(Token::Arrow)
+                    }
+                    _ => Ok(Token::Minus),
+                }
+            }
+            '*' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::StarEq)
+                } else {
+                    Ok(Token::Star)
+                }
+            }
+            '/' => {
+                self.advance();
+                if self.current() == Some('=') {
+                    self.advance();
+                    Ok(Token::SlashEq)
+                } else {
+                    Ok(Token::Slash)
+                }
+            }
+            '%' => {
+                self.advance();
+                Ok(Token::Percent)
+            }
+            '"' => self.read_string(),
+            '0'..='9' => self.read_number(),
+            'a'..='z' | 'A'..='Z' | '_' => Ok(self.read_identifier()),
+            _ => {
+                self.advance();
+                Err(CrystalError::new(
+                    ErrorCode::UnexpectedChar,
+                    &format!("Unexpected character: '{}'", ch),
+                )
+                .at(&self.file_name, start_line, start_col))
+            }
+        }
+    }
+
+    pub fn tokenize(&mut self) -> CrystalResult<Vec<Token>> {
+        let mut tokens = Vec::new();
+        loop {
+            let tok = self.next_token()?;
+            let is_eof = tok == Token::Eof;
+            tokens.push(tok.clone());
+            if is_eof {
+                break;
+            }
+        }
+        Ok(tokens)
     }
 }
 
@@ -752,52 +710,68 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_keywords() {
-        let mut lexer = Lexer::new("manifold quantum cortex fn".to_string());
-        assert_eq!(lexer.next_token(), Token::Manifold);
-        assert_eq!(lexer.next_token(), Token::Quantum);
-        assert_eq!(lexer.next_token(), Token::QuantumCortex);
-        assert_eq!(lexer.next_token(), Token::Fn);
-    }
-
-    #[test]
-    fn test_numbers() {
-        let mut lexer = Lexer::new("42 3.14159 0x7D 0b1111101".to_string());
-        assert_eq!(lexer.next_token(), Token::IntLiteral(42));
-        assert_eq!(lexer.next_token(), Token::FloatLiteral(3.14159));
-        assert_eq!(lexer.next_token(), Token::IntLiteral(0x7D));
-        assert_eq!(lexer.next_token(), Token::IntLiteral(0b1111101));
-    }
-
-    #[test]
-    fn test_mathematical_operators() {
-        let mut lexer = Lexer::new("⊗ ⊕ ⊙ ⑦ Φ Φ⁻¹ S²".to_string());
-        assert_eq!(lexer.next_token(), Token::TensorProduct);
-        assert_eq!(lexer.next_token(), Token::Superposition);
-        assert_eq!(lexer.next_token(), Token::HoloFold);
-        assert_eq!(lexer.next_token(), Token::Project7D);
-        assert_eq!(lexer.next_token(), Token::PhiConstant);
-        assert_eq!(lexer.next_token(), Token::PhiInverse);
-        assert_eq!(lexer.next_token(), Token::S2Constant);
-    }
-
-    #[test]
-    fn test_string_literal() {
-        let mut lexer = Lexer::new(r#""Hello, Manifold!""#.to_string());
-        assert_eq!(
-            lexer.next_token(),
-            Token::StringLiteral("Hello, Manifold!".to_string())
-        );
+    fn test_sacred_set() {
+        let mut lexer = Lexer::new("⊗ ⊕ ⊙ ⑦ Φ Φ⁻¹ S² ∞ Λ Ψ");
+        assert_eq!(lexer.next_token().unwrap(), Token::TensorProduct);
+        assert_eq!(lexer.next_token().unwrap(), Token::Superposition);
+        assert_eq!(lexer.next_token().unwrap(), Token::HoloFold);
+        assert_eq!(lexer.next_token().unwrap(), Token::Project7D);
+        assert_eq!(lexer.next_token().unwrap(), Token::PhiConstant);
+        assert_eq!(lexer.next_token().unwrap(), Token::PhiInverse);
+        assert_eq!(lexer.next_token().unwrap(), Token::S2Constant);
+        assert_eq!(lexer.next_token().unwrap(), Token::Infinity);
+        assert_eq!(lexer.next_token().unwrap(), Token::LambdaConstant);
+        assert_eq!(lexer.next_token().unwrap(), Token::PsiConstant);
     }
 
     #[test]
     fn test_attributes() {
-        let mut lexer = Lexer::new("@sovereignty @manifold @crystal".to_string());
+        let mut lexer = Lexer::new("@crystal @manifold @cortex");
         assert_eq!(
-            lexer.next_token(),
-            Token::Attribute("sovereignty".to_string())
+            lexer.next_token().unwrap(),
+            Token::Attribute("crystal".to_string())
         );
-        assert_eq!(lexer.next_token(), Token::Attribute("manifold".to_string()));
-        assert_eq!(lexer.next_token(), Token::Attribute("crystal".to_string()));
+        assert_eq!(
+            lexer.next_token().unwrap(),
+            Token::Attribute("manifold".to_string())
+        );
+        assert_eq!(
+            lexer.next_token().unwrap(),
+            Token::Attribute("cortex".to_string())
+        );
+    }
+
+    #[test]
+    fn test_keywords() {
+        let mut lexer = Lexer::new("manifold crystal hologram quantum entropy theorem proof");
+        assert_eq!(lexer.next_token().unwrap(), Token::Manifold);
+        assert_eq!(lexer.next_token().unwrap(), Token::Crystal);
+        assert_eq!(lexer.next_token().unwrap(), Token::Hologram);
+        assert_eq!(lexer.next_token().unwrap(), Token::Quantum);
+        assert_eq!(lexer.next_token().unwrap(), Token::Entropy);
+        assert_eq!(lexer.next_token().unwrap(), Token::Theorem);
+        assert_eq!(lexer.next_token().unwrap(), Token::Proof);
+    }
+
+    #[test]
+    fn test_numbers() {
+        let mut lexer = Lexer::new("123 0xFF 0b1010 3.14159");
+        assert_eq!(lexer.next_token().unwrap(), Token::IntLiteral(123));
+        assert_eq!(lexer.next_token().unwrap(), Token::IntLiteral(255));
+        assert_eq!(lexer.next_token().unwrap(), Token::IntLiteral(10));
+        assert_eq!(lexer.next_token().unwrap(), Token::FloatLiteral(3.14159));
+    }
+
+    #[test]
+    fn test_strings() {
+        let mut lexer = Lexer::new("\"hello 7D\" \"escaped \\\" quote\"");
+        assert_eq!(
+            lexer.next_token().unwrap(),
+            Token::StringLiteral("hello 7D".to_string())
+        );
+        assert_eq!(
+            lexer.next_token().unwrap(),
+            Token::StringLiteral("escaped \" quote".to_string())
+        );
     }
 }

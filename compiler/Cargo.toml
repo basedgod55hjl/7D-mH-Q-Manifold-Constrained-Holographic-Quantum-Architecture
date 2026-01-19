@@ -1,11 +1,66 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🔮 7D CRYSTAL COMPILER
+# ═══════════════════════════════════════════════════════════════════════════════
+
 [package]
-name = "compiler"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes"]
-description = "7D Crystal MHQL Compiler"
+name = "crystal-compiler"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "7D Crystal Language Compiler - Manifold-Constrained Holographic Quantum Language"
+keywords = ["compiler", "7d", "manifold", "quantum", "holographic"]
+categories = ["compilers", "development-tools"]
+
+[lib]
+name = "crystal_compiler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "7dc"
+path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0"
-thiserror = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+# Workspace dependencies
+thiserror.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+colored.workspace = true
+clap.workspace = true
+
+# Local dependencies
+once_cell = "1.19"
+indexmap = { version = "2.1", features = ["serde"] }
+logos = "0.14"
+codespan-reporting = "0.11"
+ariadne = "0.4"
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+test-case.workspace = true
+
+# Benchmarks (uncomment when bench files exist)
+# [[bench]]
+# name = "lexer_bench"
+# harness = false
+
+# [[bench]]
+# name = "parser_bench"
+# harness = false
+
+[features]
+default = []
+lsp = ["tower-lsp"]
+wasm = ["wasm-bindgen"]
+
+[dependencies.tower-lsp]
+version = "0.20"
+optional = true
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true

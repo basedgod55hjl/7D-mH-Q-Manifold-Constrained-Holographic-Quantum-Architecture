@@ -1300,10 +1300,6 @@ impl Parser {
                 self.advance();
                 Ok(ASTNode::PsiConstant)
             }
-            Token::Infinity => {
-                self.advance();
-                Ok(ASTNode::Identifier("INFINITY".to_string()))
-            }
             token @ (Token::Identifier(_)
             | Token::Proof
             | Token::Consciousness

@@ -109,7 +109,7 @@ impl SemanticAnalyzer {
             ASTNode::ManifoldDecl {
                 name,
                 dimensions,
-                curvature,
+                curvature: _,
                 topology,
                 ..
             } => {

@@ -1,10 +1,12 @@
 [package]
-name = "quantum_hybrid"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes"]
+name = "crystal-quantum-hybrid"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "7D Crystal Quantum-Classical Hybrid Simulator"
 
 [dependencies]
-num-complex = "0.4"
-rand = "0.8"
+num-complex.workspace = true
+rand.workspace = true
+anyhow.workspace = true
+serde.workspace = true

@@ -1,7 +1,7 @@
 // File: transformer/src/manifold_ops.rs
 // Enhanced 7D Manifold Operations with SIMD Acceleration
 // Discovered by Sir Charles Spikes, December 24, 2025
-// Enhanced by Claude AI Agent
+// Developed by Sir Charles Spikes
 
 use std::simd::{f64x4, Simd, SimdFloat};
 
@@ -18,9 +18,9 @@ pub const PHI_BASIS: [f64; 7] = [
     1.0,
     PHI,
     PHI_SQUARED,
-    PHI * PHI_SQUARED,           // Φ³
-    PHI_SQUARED * PHI_SQUARED,   // Φ⁴
-    PHI * PHI_SQUARED * PHI_SQUARED, // Φ⁵
+    PHI * PHI_SQUARED,                       // Φ³
+    PHI_SQUARED * PHI_SQUARED,               // Φ⁴
+    PHI * PHI_SQUARED * PHI_SQUARED,         // Φ⁵
     PHI_SQUARED * PHI_SQUARED * PHI_SQUARED, // Φ⁶
 ];
 
@@ -33,7 +33,10 @@ pub struct Vector7D {
 
 impl Vector7D {
     pub fn new(coords: [f64; 7]) -> Self {
-        Self { coords, cached_norm: None }
+        Self {
+            coords,
+            cached_norm: None,
+        }
     }
 
     pub fn zero() -> Self {
@@ -144,7 +147,7 @@ impl PoincareBall7D {
     /// Möbius addition in Poincaré ball
     pub fn mobius_add(&self, u: &Vector7D, v: &Vector7D) -> Vector7D {
         let c = -self.curvature;
-        
+
         let u_norm_sq = u.dot(u);
         let v_norm_sq = v.dot(v);
         let uv_dot = u.dot(v);
@@ -166,7 +169,7 @@ impl PoincareBall7D {
     pub fn distance(&self, u: &Vector7D, v: &Vector7D) -> f64 {
         let u_norm_sq = u.dot(u);
         let v_norm_sq = v.dot(v);
-        
+
         let diff = u.add(&v.scale(-1.0));
         let diff_norm_sq = diff.dot(&diff);
 
@@ -181,23 +184,23 @@ impl PoincareBall7D {
     pub fn exp_map(&self, p: &Vector7D, v: &Vector7D) -> Vector7D {
         let c = -self.curvature;
         let v_norm = v.dot(v).sqrt();
-        
+
         if v_norm < 1e-10 {
             return p.clone();
         }
 
         let p_norm_sq = p.dot(p);
         let lambda = 2.0 / (1.0 - c * p_norm_sq);
-        
+
         let scaled_norm = lambda * v_norm * c.sqrt();
         let sinh_val = scaled_norm.sinh();
         let cosh_val = scaled_norm.cosh();
 
         let v_normalized = v.scale(1.0 / v_norm);
-        
+
         let term1 = p.scale(cosh_val);
         let term2 = v_normalized.scale(sinh_val / (c.sqrt() * lambda));
-        
+
         term1.add(&term2)
     }
 
@@ -233,7 +236,7 @@ impl HolographicPattern {
     pub fn new(seed: u64) -> Self {
         let mut phases = [[0.0; 7]; 7];
         let mut rng = seed;
-        
+
         for i in 0..7 {
             for j in 0..7 {
                 rng = rng.wrapping_mul(6364136223846793005).wrapping_add(1);
@@ -252,7 +255,7 @@ impl HolographicPattern {
     /// Fold two patterns (interference)
     pub fn fold(&self, other: &Self) -> Self {
         let mut phases = [[0.0; 7]; 7];
-        
+
         for i in 0..7 {
             for j in 0..7 {
                 // Interference pattern
@@ -282,7 +285,7 @@ impl HolographicPattern {
     /// Decode pattern to vector
     pub fn decode(&self) -> Vector7D {
         let mut coords = [0.0; 7];
-        
+
         for i in 0..7 {
             let mut sum = 0.0;
             for j in 0..7 {
@@ -303,7 +306,11 @@ mod tests {
     fn test_phi_basis_ratios() {
         for i in 0..6 {
             let ratio = PHI_BASIS[i + 1] / PHI_BASIS[i];
-            assert!((ratio - PHI).abs() < 1e-10, "Φ-ratio not preserved at index {}", i);
+            assert!(
+                (ratio - PHI).abs() < 1e-10,
+                "Φ-ratio not preserved at index {}",
+                i
+            );
         }
     }
 
@@ -323,7 +330,7 @@ mod tests {
         let v = Vector7D::new([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]);
         let zero = Vector7D::zero();
         let result = ball.mobius_add(&zero, &v);
-        
+
         for i in 0..7 {
             assert!((result.coords[i] - v.coords[i]).abs() < 1e-10);
         }
@@ -334,7 +341,7 @@ mod tests {
         let p1 = HolographicPattern::new(12345);
         let p2 = HolographicPattern::new(67890);
         let folded = p1.fold(&p2);
-        
+
         assert!(folded.amplitude > 0.0);
         assert!(folded.frequency > 0.0);
     }

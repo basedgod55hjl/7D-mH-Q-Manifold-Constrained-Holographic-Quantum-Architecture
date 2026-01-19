@@ -1,13 +1,24 @@
 [package]
-name = "crystal_benchmarks"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes"]
-description = "7D Crystal Benchmarks"
+name = "crystal-benchmarks"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "7D Crystal System Benchmarks"
 
 [dependencies]
-criterion = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+num_cpus = "1.16"
+rayon = "1.8"
 
-[[bench]]
-name = "core"
-harness = false
+# Internal crates
+crystal-compiler = { path = "../compiler" }
+crystal-runtime = { path = "../runtime" }
+
+# Comment out benchmarks until files are created
+# [[bench]]
+# name = "manifold"
+# harness = false
+
+# [[bench]]
+# name = "holographic"
+# harness = false

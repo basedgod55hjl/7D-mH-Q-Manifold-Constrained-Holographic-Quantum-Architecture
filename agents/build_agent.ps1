@@ -1,5 +1,5 @@
 # 7D Crystal System - Auto Build Agent
-# Created by Claude for Sir Charles Spikes
+# Created by Sir Charles Spikes
 # Auto-runs builds, tests, and optimizations
 
 param(

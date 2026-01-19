@@ -1,7 +1,7 @@
 // File: kernels/cuda/7d_enhanced_kernels.cu
 // Enhanced 7D Manifold CUDA Kernels with Tensor Core Support
 // Discovered by Sir Charles Spikes, December 24, 2025
-// Enhanced by Claude AI Agent
+// Developed by Sir Charles Spikes
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>

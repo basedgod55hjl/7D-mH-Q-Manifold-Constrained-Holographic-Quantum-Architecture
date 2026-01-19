@@ -1,7 +1,11 @@
 [package]
-name = "neural_language"
-version = "0.1.0"
-edition = "2021"
+name = "crystal-neural-language"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "7D Crystal Neural Language Substrate"
 
 [dependencies]
-anyhow = "1.0"
+anyhow.workspace = true
+serde.workspace = true
+tokio.workspace = true

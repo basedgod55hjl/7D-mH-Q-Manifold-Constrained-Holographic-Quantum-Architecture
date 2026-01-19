@@ -1,7 +1,7 @@
 //! Crystal 7D Tokenizer - Tiktoken-compatible tokenization
 //! Supports Llama/DeepSeek vocabulary
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 // use tiktoken_rs::{cl100k_base, CoreBPE};
 
 // Dummy struct to satisfy field type if we don't want to change struct definition excessively

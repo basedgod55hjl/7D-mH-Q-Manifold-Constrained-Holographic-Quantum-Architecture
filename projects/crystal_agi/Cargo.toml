@@ -1,20 +1,22 @@
 [package]
-name = "crystal_agi"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes <basedgod@7dcrystal.io>"]
-description = "Crystal AGI - Manifold-Native Intelligence"
+name = "crystal-agi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Crystal AGI - Manifold-Native Autonomous Intelligence"
 
 [dependencies]
-anyhow = "1.0"
-tokio = { version = "1.35", features = ["full"] }
-tracing = "0.1"
-rand = "0.8"
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 # Local crates
-compiler = { path = "../../compiler" }
-runtime = { path = "../../runtime" }
-transformer = { path = "../../transformer" }
+crystal-compiler = { workspace = true }
+crystal-runtime = { workspace = true }
+crystal-transformer = { workspace = true }
 
 [[bin]]
 name = "crystal_agi"

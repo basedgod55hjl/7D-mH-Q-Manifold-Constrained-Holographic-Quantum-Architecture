@@ -1,25 +1,25 @@
 [package]
-name = "compiler_service"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes <basedgod@7dcrystal.io>"]
-description = "Sovereign Compiler as a Service - 7D Crystal System"
+name = "crystal-compiler-service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "7D Crystal Compiler as a Service - Web API"
 
 [dependencies]
-tokio = { version = "1.35", features = ["full"] }
-axum = { version = "0.7", features = ["macros"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-anyhow = "1.0"
-tracing = "0.1"
-tracing-subscriber = "0.3"
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+tokio.workspace = true
+axum.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tower-http.workspace = true
 uuid = { version = "1.6", features = ["v4"] }
 tempfile = "3.9"
 
 # Local crates
-compiler = { path = "../../compiler" }
-runtime = { path = "../../runtime" }
+crystal-compiler = { path = "../../compiler" }
+crystal-runtime = { path = "../../runtime" }
 
 [[bin]]
 name = "compiler_service"

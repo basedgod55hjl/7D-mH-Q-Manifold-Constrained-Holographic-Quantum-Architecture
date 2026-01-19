@@ -1,32 +1,48 @@
 [package]
-name = "sovereign_assistant"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes <basedgod@7dcrystal.io>"]
+name = "crystal-assistant"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "Sovereign Local AI Assistant - 7D Crystal System"
 
 [dependencies]
 # Core
-tokio = { version = "1.35", features = ["full"] }
-anyhow = "1.0"
-tracing = "0.1"
-tracing-subscriber = "0.3"
+tokio.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+futures-util = "0.3"
+uuid = { version = "1.0", features = ["v4"] }
+regex = "1.10"
 
 # ML
-half = { version = "2.3", features = ["std"] }
+half.workspace = true
 tiktoken-rs = "0.5"
 
-# CLI
-clap = { version = "4.4", features = ["derive"] }
-rustyline = "13.0"
-colored = "2.0"
+# TUI & CLI
+ratatui = "0.26"
+crossterm = { version = "0.27" } # No special features needed for basic KeyCode
+textwrap = "0.16"
+colored.workspace = true
+unicode-width = "0.1"
+
+# Hardware Mapping
+sysinfo = "0.30"
+nvml-wrapper = "0.10"
 
 # Local crates
-transformer = { path = "../../transformer" }
-llm_builder = { path = "../../llm_builder" }
-model_runner = { path = "../../model_runner" }
-neural_language = { path = "../../projects/neural_language" }
+crystal-transformer = { workspace = true }
+crystal-llm-builder = { workspace = true }
+crystal-model-runner = { workspace = true }
+crystal-neural-language = { path = "../neural_language" }
 
 [[bin]]
 name = "sovereign"
 path = "src/main.rs"
+
+[[bin]]
+name = "stressor"
+path = "src/stressor.rs"

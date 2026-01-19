@@ -1,6 +1,6 @@
 # 7D Crystal System - Autonomous Agent
-# Runs in background to save Claude tokens - auto-builds, tests, optimizes
-# Created for Sir Charles Spikes - January 2026
+# Auto-builds, tests, and optimizes in the background
+# Created by Sir Charles Spikes - January 2026
 
 param(
     [switch]$Start,

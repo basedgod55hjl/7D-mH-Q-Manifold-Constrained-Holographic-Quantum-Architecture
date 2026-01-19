@@ -73,12 +73,27 @@ pub enum IR7D {
     //Labels (for control flow)
     Label(usize),
 
+    // Labels for higher-level IR
+    LabelStr(String),
+
     // Fused operations for GPU kernels
     FusedOp {
         name: String,
         ops: Vec<IR7D>,
         reg_map: HashMap<usize, usize>, // local reg -> actual reg
     },
+
+    // Missing variants for optimization passes
+    Nop,
+    Print,
+    Call(String),
+    LoadReg(usize),
+    StoreReg(usize),
+    AddReg(usize, usize),
+    MulReg(usize, usize),
+    AddFloat(f64, f64),
+    MulFloat(f64, f64),
+    DivFloat(f64, f64),
 }
 
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -156,11 +171,13 @@ pub enum IROpcode {
     Param(String),
 }
 
+#[derive(Clone)]
 pub struct IRBlock {
     pub name: String,
     pub instructions: Vec<IROpcode>,
 }
 
+#[derive(Clone)]
 pub struct IRBlock7D {
     pub name: String,
     pub instructions: Vec<IR7D>,
@@ -172,11 +189,18 @@ pub struct IRGenerator {
     label_count: usize,
 }
 
+impl IRGenerator {
+    pub fn get_blocks(&self) -> Vec<IRBlock> {
+        self.blocks.clone()
+    }
+}
+
 pub struct IRGenerator7D {
     pub blocks: Vec<IRBlock7D>,
     current_block: Vec<IR7D>,
     label_count: usize,
     symbol_table: HashMap<String, usize>, // name -> stack offset
+    manifold_table: HashMap<String, f64>, // name -> curvature
     reg_count: usize,
 }
 
@@ -187,7 +211,23 @@ impl IRGenerator7D {
             current_block: Vec::new(),
             label_count: 0,
             symbol_table: HashMap::new(),
+            manifold_table: HashMap::new(),
             reg_count: 0,
+        }
+    }
+
+    pub fn get_blocks(&self) -> Vec<IRBlock7D> {
+        self.blocks.clone()
+    }
+
+    fn evaluate_float(&self, node: &ASTNode) -> f64 {
+        match node {
+            ASTNode::FloatLiteral(f) => *f,
+            ASTNode::IntLiteral(i) => *i as f64,
+            ASTNode::PhiConstant => 1.618033988749895,
+            ASTNode::PhiInverse => 0.618033988749895,
+            ASTNode::S2Constant => 0.01,
+            _ => 0.0,
         }
     }
 
@@ -268,8 +308,61 @@ impl IRGenerator7D {
                     BinaryOperator::Sub => self.current_block.push(IR7D::Sub),
                     BinaryOperator::Mul => self.current_block.push(IR7D::Mul),
                     BinaryOperator::Div => self.current_block.push(IR7D::Div),
-                    _ => {} // Handle other operators
+                    BinaryOperator::HoloFold => {
+                        let out_reg = self.allocate_reg();
+                        self.current_block.push(IR7D::HolographicFold {
+                            p1_reg: self.reg_count - 2,
+                            p2_reg: self.reg_count - 1,
+                            out_reg,
+                            phases: 7, // Default to 7D crystal phases
+                        });
+                    }
+                    BinaryOperator::Arrow => {
+                        if let ASTNode::Identifier(manifold_name) = &**right {
+                            let curvature =
+                                *self.manifold_table.get(manifold_name).unwrap_or(&0.618);
+                            let input_reg = self.reg_count - 1;
+                            let output_reg = self.allocate_reg();
+                            self.current_block.push(IR7D::ManifoldProject {
+                                input_reg,
+                                output_reg,
+                                curvature,
+                            });
+                        }
+                    }
+                    _ => {}
                 }
+            }
+            ASTNode::Identifier(name) => {
+                if let Some(reg) = self.symbol_table.get(name) {
+                    let offset = *reg as isize * 8;
+                    self.current_block.push(IR7D::Load(*reg, offset));
+                }
+            }
+            ASTNode::UnaryOp { op, expr } => {
+                self.generate(expr);
+                match op {
+                    crate::parser::UnaryOperator::Project7D => {
+                        let input_reg = self.reg_count - 1;
+                        let output_reg = self.allocate_reg();
+                        self.current_block.push(IR7D::ManifoldProject {
+                            input_reg,
+                            output_reg,
+                            curvature: 0.618,
+                        });
+                    }
+                    crate::parser::UnaryOperator::Neg => {
+                        self.current_block.push(IR7D::PushFloat(-1.0));
+                        self.current_block.push(IR7D::Mul);
+                    }
+                    _ => {}
+                }
+            }
+            ASTNode::ManifoldDecl {
+                name, curvature, ..
+            } => {
+                let curv_val = self.evaluate_float(curvature);
+                self.manifold_table.insert(name.clone(), curv_val);
             }
             ASTNode::ManifoldProjection {
                 input, curvature, ..
