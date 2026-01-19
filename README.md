@@ -59,16 +59,34 @@ DIMS              = 7
 ### Architecture
 
 ```mermaid
-graph TD
-    A[Source .7d] -->|Lexer| B[Tokens]
-    B -->|Parser| C[AST]
-    C -->|Semantic| D[Typed AST]
-    D -->|IR Gen| E[7D-IR]
-    E -->|Optimize| F[Optimized IR]
-    F -->|Codegen| G{Backends}
-    G -->|CUDA| H[GPU Kernel]
-    G -->|CPU| I[x86-64]
-    G -->|Metal| J[Apple GPU]
+graph LR
+    subgraph "7D Crystal System Architecture"
+        A[7D Source Code] --> B[Compiler Pipeline]
+        B --> C[7D Transformer]
+        C --> D[LLM Builder]
+        D --> E[Model Runner]
+        E --> F[CUDA/GPU]
+        
+        B --> B1[Lexer → Parser]
+        B1 --> B2[Semantic → IR]
+        B2 --> B3[Optimize → Codegen]
+        
+        C --> C1[GQA Attention]
+        C1 --> C2[SwiGLU FFN]
+        C2 --> C3[RoPE + RMSNorm]
+        C3 --> C4[Manifold Projection]
+        
+        D --> D1[GGUF Writer]
+        D1 --> D2[Quantization Q4/Q8]
+        
+        E --> E1[Model Loading]
+        E1 --> E2[Inference Engine]
+        E2 --> E3[Token Generation]
+        
+        F --> F1[7D Kernels]
+        F1 --> F2[Φ-Attention]
+        F2 --> F3[Holographic Ops]
+    end
 ```
 
 ---
@@ -161,6 +179,7 @@ quantum cortex main() -> i32 {
 | Document | Description |
 |----------|-------------|
 | [LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md) | Complete 7D-MHQL language reference |
+| [TRANSFORMER_ARCHITECTURE.md](docs/TRANSFORMER_ARCHITECTURE.md) | **NEW**: Detailed transformer architecture with GQA diagrams |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and data flow |
 | [MATHEMATICS.md](docs/MATHEMATICS.md) | Mathematical foundations |
 | [USE_CASES.md](docs/USE_CASES.md) | Real-world applications guide |
@@ -172,21 +191,85 @@ quantum cortex main() -> i32 {
 
 ---
 
-## 🔌 NVIDIA Integration
+## 🧬 Transformer Architecture Highlights
 
-The 7D Crystal System integrates with 17 NVIDIA libraries:
+### Grouped Query Attention (GQA)
 
-| Library | Purpose |
-|---------|---------|
-| **apex** | Mixed precision training |
-| **CCCL** | CUDA C++ Core Libraries |
-| **cuda-quantum** | Quantum computing |
-| **cutlass** | High-performance GEMM |
-| **Megatron-LM** | Large model training |
-| **NeMo** | Neural modules |
-| **TensorRT-LLM** | Inference optimization |
-| **TransformerEngine** | FP8 training |
-| **warp** | Differentiable physics |
+```
+┌────────────────────────────────────────────────┐
+│         GQA: Memory-Efficient Attention        │
+├────────────────────────────────────────────────┤
+│                                                │
+│  n_heads = 32      (Query heads)              │
+│  n_kv_heads = 8    (Key/Value heads)          │
+│  Compression = 4x   (Memory savings)          │
+│                                                │
+│  Input [B, S, H] → Q[B,S,32×d]               │
+│                  → K[B,S,8×d]                │
+│                  → V[B,S,8×d]                │
+│                                                │
+│  repeat_kv: K,V expanded 8→32 heads          │
+│  Attention: softmax(Q@K^T/√d) @ V            │
+│  Output: [B, S, H]                            │
+└────────────────────────────────────────────────┘
+```
+
+### 7D Manifold Projection
+
+```
+Φ-constrained Poincaré Ball:
+
+  x̂ = x / (1 + ||x|| + Φ⁻¹ + κ)
+
+  where:
+    Φ = 1.618033988749895 (Golden Ratio)
+    κ = Φ⁻¹ (Curvature)
+    S² < 0.01 (Stability Bound)
+```
+
+### SwiGLU Feed-Forward
+
+```
+FFN(x) = (SiLU(x·W_gate) ⊙ (x·W_up)) · W_down
+
+SiLU(x) = x·σ(x) = x/(1+e^(-x))
+
+Dimensions:
+  Hidden → Intermediate: [H, 4H]
+  Intermediate → Hidden: [4H, H]
+```
+
+---
+
+## ⚡ Key Language Features
+
+### 7D Crystal Syntax
+
+```rust
+// Manifold-constrained variables
+manifold x: Vec7D = [1.0, Φ, Φ², Φ³, Φ⁴, Φ⁵, Φ⁶];
+
+// Φ-ratio preservation
+quantum q = |ψ⟩ with coherence Φ;
+
+// Holographic projection
+let pattern = x ⑦ y;  // 7D projection operator
+
+// Automatic manifold constraints
+fn transform(v: Vec7D) -> Vec7D {
+    v.project_poincare()  // Auto-enforces S² < 0.01
+}
+```
+
+### Operators
+
+| Operator | Meaning | Constraint |
+|----------|---------|------------|
+| `⑦` | 7D Project | Poincaré ball |
+| `⊕` | Möbius Add | Hyperbolic |
+| `Φ` | Golden Ratio | 1.618... |
+| `∮` | Holographic Fold | Pattern interference |
+| `⟨⟩` | Quantum State | Coherence > 0 |
 
 ---
 
