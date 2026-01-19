@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use candle_core::quantized::gguf_file;
 use candle_core::{Device, Tensor};
 use std::collections::HashMap;
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, Seek, Write};
 use std::path::Path;
 
 // ============================================================================
@@ -120,18 +120,23 @@ impl GGUFWriter {
         })
     }
 
-    pub fn write_header(&mut self, version: u32, tensor_count: u64) -> Result<()> {
+    pub fn write_header(
+        &mut self,
+        version: u32,
+        tensor_count: u64,
+        metadata_count: u64,
+    ) -> Result<()> {
         self.writer.write_all(b"GGUF")?;
         self.writer.write_all(&version.to_le_bytes())?;
         self.writer.write_all(&tensor_count.to_le_bytes())?;
-        self.writer.write_all(&0u64.to_le_bytes())?;
+        self.writer.write_all(&metadata_count.to_le_bytes())?;
         Ok(())
     }
 
     pub fn write_kv_string(&mut self, key: &str, value: &str) -> Result<()> {
         self.writer.write_all(&(key.len() as u64).to_le_bytes())?;
         self.writer.write_all(key.as_bytes())?;
-        self.writer.write_all(&8u32.to_le_bytes())?;
+        self.writer.write_all(&8u32.to_le_bytes())?; // GGUF_TYPE_STRING = 8
         self.writer.write_all(&(value.len() as u64).to_le_bytes())?;
         self.writer.write_all(value.as_bytes())?;
         Ok(())
@@ -140,8 +145,32 @@ impl GGUFWriter {
     pub fn write_kv_u32(&mut self, key: &str, value: u32) -> Result<()> {
         self.writer.write_all(&(key.len() as u64).to_le_bytes())?;
         self.writer.write_all(key.as_bytes())?;
-        self.writer.write_all(&4u32.to_le_bytes())?;
+        self.writer.write_all(&4u32.to_le_bytes())?; // GGUF_TYPE_UINT32 = 4
         self.writer.write_all(&value.to_le_bytes())?;
+        Ok(())
+    }
+
+    pub fn write_kv_f32(&mut self, key: &str, value: f32) -> Result<()> {
+        self.writer.write_all(&(key.len() as u64).to_le_bytes())?;
+        self.writer.write_all(key.as_bytes())?;
+        self.writer.write_all(&5u32.to_le_bytes())?; // GGUF_TYPE_FLOAT32 = 5
+        self.writer.write_all(&value.to_le_bytes())?;
+        Ok(())
+    }
+
+    pub fn current_position(&mut self) -> Result<u64> {
+        self.writer.flush()?;
+        Ok(self.writer.get_ref().stream_position()?)
+    }
+
+    pub fn write_padding(&mut self, alignment: u64) -> Result<()> {
+        let pos = self.current_position()?;
+        let remainder = pos % alignment;
+        if remainder != 0 {
+            let padding = alignment - remainder;
+            let zeros = vec![0u8; padding as usize];
+            self.writer.write_all(&zeros)?;
+        }
         Ok(())
     }
 

@@ -1,28 +1,34 @@
 [package]
-name = "model_runner"
-version = "1.0.0"
-edition = "2021"
-authors = ["Sir Charles Spikes"]
+name = "crystal-model-runner"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "7D Crystal Model Runner - High-performance LLM inference engine"
 
-[dependencies]
-tokio = { version = "1.35", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-anyhow = "1.0"
-thiserror = "1.0"
-tracing = "0.1"
-ndarray = "0.15"
-half = { version = "2.3", features = ["std"] }
-memmap2 = "0.9"
-byteorder = "1.5"
-rayon = "1.8"
-parking_lot = "0.12"
-crossbeam = "0.8"
-rand = "0.8"
 
-llm_builder = { path = "../llm_builder" }
-transformer = { path = "../transformer" }
+[lib]
+name = "model_runner"
+path = "src/lib.rs"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+ndarray.workspace = true
+half.workspace = true
+memmap2.workspace = true
+byteorder.workspace = true
+rayon.workspace = true
+parking_lot.workspace = true
+rand.workspace = true
+
+crystal-llm-builder = { workspace = true }
+transformer = { package = "crystal-transformer", path = "../transformer" }
 candle-core = "0.8"
 
 [features]
@@ -31,5 +37,5 @@ cuda = ["cudarc"]
 metal = []
 
 [dependencies.cudarc]
-version = "0.10"
+workspace = true
 optional = true

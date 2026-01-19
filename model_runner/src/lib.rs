@@ -347,7 +347,6 @@ fn infer_config(content: &gguf_file::Content) -> Result<Crystal7DConfig> {
         })
         .unwrap_or(128256);
 
-    // RoPE
     let rope_theta = props
         .get("llama.attention.rope.freq_base")
         .map(|v| match v {
@@ -356,9 +355,13 @@ fn infer_config(content: &gguf_file::Content) -> Result<Crystal7DConfig> {
         })
         .unwrap_or(10000.0);
 
+    let intermediate_size = get_usize("llama.feed_forward_length")
+        .or_else(|_| get_usize("feed_forward_length"))
+        .unwrap_or(embedding_length * 4); // Default: 4x hidden size
+
     Ok(Crystal7DConfig {
         hidden_size: embedding_length,
-        intermediate_size: 11008, // Usually calculated
+        intermediate_size,
         num_layers: block_count,
         num_attention_heads: n_head,
         num_kv_heads: n_kv_head,

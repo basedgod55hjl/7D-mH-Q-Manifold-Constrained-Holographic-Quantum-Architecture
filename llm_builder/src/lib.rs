@@ -4,6 +4,7 @@
 
 pub mod config;
 pub mod gguf;
+
 pub mod manifold;
 pub mod model;
 pub mod optimizer;
@@ -383,28 +384,205 @@ impl LLMBuilder {
         tracing::info!("Building GGUF model: {}", self.config.name);
 
         let mut writer = GGUFWriter::new(output_path)?;
-        writer.write_header(1, 2)?;
+
+        // Count tensors
+        // Embed (1) + Layers * 9 + Output Norm (1) + Output Head (1) = 3 + Layers*9
+        let tensor_count = 3 + (self.config.num_layers * 9);
+
+        // Header (Version 2, Tensor Count, Metadata Count = 7)
+        writer.write_header(2, tensor_count as u64, 7)?;
         writer.write_kv_string("general.name", &self.config.name)?;
         writer.write_kv_u32("general.architecture", 7)?;
-
-        let mock_data = vec![0.0f32; self.config.hidden_size];
-        let bytes: &[u8] = unsafe {
-            std::slice::from_raw_parts(
-                mock_data.as_ptr() as *const u8,
-                mock_data.len() * std::mem::size_of::<f32>(),
-            )
-        };
-
-        writer.write_tensor_info(
-            "token_embd.weight",
-            &[self.config.hidden_size as u64, 1],
-            GGUFType::F32,
-            0,
+        writer.write_kv_u32("llama.embedding_length", self.config.hidden_size as u32)?;
+        writer.write_kv_u32("llama.block_count", self.config.num_layers as u32)?;
+        writer.write_kv_u32(
+            "llama.attention.head_count",
+            self.config.num_attention_heads as u32,
+        )?;
+        writer.write_kv_u32(
+            "llama.attention.head_count_kv",
+            self.config.num_kv_heads as u32,
+        )?;
+        writer.write_kv_f32(
+            "llama.attention.rope.freq_base",
+            self.config.rope_theta as f32,
         )?;
 
-        writer.write_tensor_data(bytes)?;
-        writer.flush()?;
+        let mut current_offset = 0u64;
 
+        // Helper closure to calculate size
+        let calc_size = |dims: &[u64]| -> u64 {
+            dims.iter().product::<u64>() * 4 // F32 = 4 bytes
+        };
+
+        // --- PASS 1: TENSOR INFOS ---
+
+        // 1. Embedding
+        let emb_dims = &[
+            self.config.hidden_size as u64,
+            self.config.vocab_size as u64,
+        ];
+        writer.write_tensor_info("token_embd.weight", emb_dims, GGUFType::F32, current_offset)?;
+        current_offset += calc_size(emb_dims);
+
+        // 2. Layers
+        for i in 0..self.config.num_layers {
+            let p = |s: &str| format!("blk.{}.{}", i, s);
+            let h = self.config.hidden_size as u64;
+            let i_size = self.config.intermediate_size as u64;
+            let head_dim = h / self.config.num_attention_heads as u64;
+            let q_dim = head_dim * self.config.num_attention_heads as u64;
+            let kv_dim = head_dim * self.config.num_kv_heads as u64;
+
+            // Attn Norm
+            let dim_norm = &[h];
+            writer.write_tensor_info(
+                &p("attn_norm.weight"),
+                dim_norm,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_norm);
+
+            // Attn Q: [hidden, q_dim]
+            let dim_q = &[h, q_dim];
+            writer.write_tensor_info(&p("attn_q.weight"), dim_q, GGUFType::F32, current_offset)?;
+            current_offset += calc_size(dim_q);
+
+            // Attn K: [hidden, kv_dim]
+            let dim_k = &[h, kv_dim];
+            writer.write_tensor_info(&p("attn_k.weight"), dim_k, GGUFType::F32, current_offset)?;
+            current_offset += calc_size(dim_k);
+
+            // Attn V: [hidden, kv_dim]
+            let dim_v = &[h, kv_dim];
+            writer.write_tensor_info(&p("attn_v.weight"), dim_v, GGUFType::F32, current_offset)?;
+            current_offset += calc_size(dim_v);
+
+            // Attn Output: [q_dim, hidden]
+            let dim_o = &[q_dim, h];
+            writer.write_tensor_info(
+                &p("attn_output.weight"),
+                dim_o,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_o);
+
+            // FFN Norm
+            writer.write_tensor_info(
+                &p("ffn_norm.weight"),
+                dim_norm,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_norm);
+
+            // FFN Gate: [hidden, intermediate]
+            let dim_gate = &[h, i_size];
+            writer.write_tensor_info(
+                &p("ffn_gate.weight"),
+                dim_gate,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_gate);
+
+            // FFN Up: [hidden, intermediate]
+            writer.write_tensor_info(
+                &p("ffn_up.weight"),
+                dim_gate,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_gate);
+
+            // FFN Down: [intermediate, hidden]
+            let dim_down = &[i_size, h];
+            writer.write_tensor_info(
+                &p("ffn_down.weight"),
+                dim_down,
+                GGUFType::F32,
+                current_offset,
+            )?;
+            current_offset += calc_size(dim_down);
+        }
+
+        // 3. Final Norm
+        let dim_norm = &[self.config.hidden_size as u64];
+        writer.write_tensor_info(
+            "output_norm.weight",
+            dim_norm,
+            GGUFType::F32,
+            current_offset,
+        )?;
+        current_offset += calc_size(dim_norm);
+
+        // 4. Output Head
+        let dim_head = &[
+            self.config.hidden_size as u64,
+            self.config.vocab_size as u64,
+        ];
+        writer.write_tensor_info("output.weight", dim_head, GGUFType::F32, current_offset)?;
+
+        // --- PADDING ---
+        writer.write_padding(32)?;
+
+        // --- PASS 2: TENSOR DATA ---
+
+        let write_f32_zeros = |w: &mut GGUFWriter, count: usize| -> Result<()> {
+            w.write_tensor_data(bytemuck::cast_slice(&vec![0.0f32; count]))?;
+            Ok(())
+        };
+        let write_f32_ones = |w: &mut GGUFWriter, count: usize| -> Result<()> {
+            w.write_tensor_data(bytemuck::cast_slice(&vec![1.0f32; count]))?;
+            Ok(())
+        };
+
+        // 1. Embedding (Zeros)
+        write_f32_zeros(
+            &mut writer,
+            self.config.hidden_size * self.config.vocab_size,
+        )?;
+
+        // 2. Layers
+        for _ in 0..self.config.num_layers {
+            let h = self.config.hidden_size;
+            let i_size = self.config.intermediate_size;
+            let head_dim = h / self.config.num_attention_heads;
+            let q_dim = head_dim * self.config.num_attention_heads;
+            let kv_dim = head_dim * self.config.num_kv_heads;
+
+            // Attn Norm (Ones)
+            write_f32_ones(&mut writer, h)?;
+            // Attn Q (Zeros)
+            write_f32_zeros(&mut writer, q_dim * h)?;
+            // Attn K
+            write_f32_zeros(&mut writer, kv_dim * h)?;
+            // Attn V
+            write_f32_zeros(&mut writer, kv_dim * h)?;
+            // Attn Output
+            write_f32_zeros(&mut writer, h * q_dim)?;
+            // FFN Norm (Ones)
+            write_f32_ones(&mut writer, h)?;
+            // Gate
+            write_f32_zeros(&mut writer, i_size * h)?;
+            // Up
+            write_f32_zeros(&mut writer, i_size * h)?;
+            // Down
+            write_f32_zeros(&mut writer, h * i_size)?;
+        }
+
+        // 3. Final Norm (Ones)
+        write_f32_ones(&mut writer, self.config.hidden_size)?;
+
+        // 4. Output Head (Zeros)
+        write_f32_zeros(
+            &mut writer,
+            self.config.vocab_size * self.config.hidden_size,
+        )?;
+
+        writer.flush()?;
         tracing::info!("Successfully built: {:?}", output_path);
         Ok(())
     }
