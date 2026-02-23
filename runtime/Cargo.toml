@@ -26,10 +26,6 @@ name = "core_mapper"
 path = "src/bin/core_mapper.rs"
 
 [[bin]]
-name = "gpu_benchmark"
-path = "src/bin/gpu_benchmark.rs"
-
-[[bin]]
 name = "verify_cuda"
 path = "src/bin/verify_cuda.rs"
 
@@ -56,6 +52,15 @@ cudarc = { workspace = true, optional = true }
 once_cell = "1.19"
 crossbeam-channel = "0.5"
 
+# WGPU & API
+wgpu = "0.20"
+pollster = "0.3"
+bytemuck = { version = "1.16", features = ["derive"] }
+axum = "0.7"
+tower-http = { version = "0.5", features = ["cors"] }
+reqwest = { version = "0.11", features = ["json"] }
+num_cpus = "1.17.0"
+
 [build-dependencies]
 cc = "1.0"
 
@@ -64,10 +69,11 @@ criterion.workspace = true
 proptest.workspace = true
 
 [features]
-default = ["cuda"]
+default = ["cuda", "wgpu_backend"]
 cuda = ["dep:cudarc"]
 hip = []
 metal = []
+wgpu_backend = []
 cpu-only = []
 
 # Benchmarks (uncomment when benches/manifold_bench.rs exists)

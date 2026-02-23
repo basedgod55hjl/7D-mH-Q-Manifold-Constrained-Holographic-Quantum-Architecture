@@ -215,6 +215,7 @@ struct EditorImgui
     NvFlowImguiRendererInterface imguiRendererInterface = {};
     NvFlowImguiRenderer* imguiRenderer = nullptr;
     NvFlowImguiTexture* imguiTexture = nullptr;
+    NvFlowImguiTexture* dogTexture = nullptr;
 };
 
 void editorImgui_init(EditorImgui* ptr, NvFlowContextInterface* contextInterface, NvFlowContext* context);

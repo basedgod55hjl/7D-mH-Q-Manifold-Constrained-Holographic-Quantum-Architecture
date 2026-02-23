@@ -27,6 +27,7 @@
 #![warn(missing_docs)]
 
 pub mod allocator;
+pub mod api;
 pub mod compute;
 pub mod executor;
 pub mod gpu;
@@ -36,10 +37,16 @@ pub mod kernels;
 pub mod quantum;
 pub mod quantum_enhanced;
 
+#[cfg(feature = "wgpu_backend")]
+pub mod wgpu_gpu;
+
 // Re-exports
 pub use allocator::{AllocError, ManifoldAllocator, Region7D};
 pub use compute::{ComputeBackend, ComputeDispatcher, ComputeStats};
 pub use gpu::{GpuError, GpuExecutor, GpuStats};
+
+#[cfg(feature = "wgpu_backend")]
+pub use wgpu_gpu::{WgpuExecutor, WgpuStats};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SACRED CONSTANTS

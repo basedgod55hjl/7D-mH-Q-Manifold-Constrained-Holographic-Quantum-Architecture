@@ -2,8 +2,8 @@
 // 7D Crystal CPU Core Mapper & Stress Test
 // Discovered by Sir Charles Spikes
 
+use crystal_runtime::{Vector7D, PHI, PHI_INV};
 use rayon::prelude::*;
-use runtime::{Vector7D, PHI, PHI_INV};
 use std::thread;
 use std::time::{Duration, Instant};
 

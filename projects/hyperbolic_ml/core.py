@@ -233,11 +233,11 @@ class HyperbolicAttention:
         V = V.reshape(batch, seq_len, self.num_heads, self.head_dim)
         
         # Project Q, K to Poincaré ball
-        Q = np.array([[[[project_to_poincare(Q[b,s,h], self.curvature) 
+        Q = np.array([[[project_to_poincare(Q[b,s,h], self.curvature) 
                          for h in range(self.num_heads)] 
                         for s in range(seq_len)] 
                        for b in range(batch)])
-        K = np.array([[[[project_to_poincare(K[b,s,h], self.curvature) 
+        K = np.array([[[project_to_poincare(K[b,s,h], self.curvature) 
                          for h in range(self.num_heads)] 
                         for s in range(seq_len)] 
                        for b in range(batch)])

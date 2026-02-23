@@ -10,7 +10,7 @@ use std::process::Command;
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src/cuda_kernels.cu");
-    
+
     // Check if CUDA feature is enabled
     #[cfg(feature = "cuda")]
     compile_cuda_kernels();
@@ -21,29 +21,33 @@ fn compile_cuda_kernels() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let cuda_source = "src/cuda_kernels.cu";
     let ptx_output = out_dir.join("crystal7d.ptx");
-    
+
     // Find nvcc
-    let cuda_path = env::var("CUDA_PATH")
-        .unwrap_or_else(|_| "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.6".to_string());
-    
+    let cuda_path = env::var("CUDA_PATH").unwrap_or_else(|_| {
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.6".to_string()
+    });
+
     let nvcc = PathBuf::from(&cuda_path).join("bin").join("nvcc.exe");
-    
+
     if !nvcc.exists() {
-        println!("cargo:warning=nvcc not found at {:?}, using embedded PTX fallback", nvcc);
+        println!(
+            "cargo:warning=nvcc not found at {:?}, using embedded PTX fallback",
+            nvcc
+        );
         // Create fallback PTX file
         fs::write(&ptx_output, get_fallback_ptx()).expect("Failed to write fallback PTX");
         println!("cargo:rustc-env=CRYSTAL_PTX_PATH={}", ptx_output.display());
         return;
     }
-    
+
     // Check if source exists
     if !PathBuf::from(cuda_source).exists() {
         println!("cargo:warning=CUDA source not found, creating...");
         fs::write(cuda_source, get_cuda_source()).expect("Failed to write CUDA source");
     }
-    
+
     println!("cargo:warning=Compiling CUDA kernels with nvcc...");
-    
+
     // Compile CUDA to PTX
     // Using SM 7.5 for GTX 1660 Ti
     let status = Command::new(&nvcc)
@@ -52,11 +56,12 @@ fn compile_cuda_kernels() {
             "-arch=sm_75",
             "-O3",
             "--use_fast_math",
-            "-o", ptx_output.to_str().unwrap(),
+            "-o",
+            ptx_output.to_str().unwrap(),
             cuda_source,
         ])
         .status();
-    
+
     match status {
         Ok(s) if s.success() => {
             println!("cargo:warning=CUDA kernels compiled successfully!");
@@ -71,7 +76,8 @@ fn compile_cuda_kernels() {
 }
 
 fn get_cuda_source() -> &'static str {
-    include_str!("src/cuda_source.txt")
+    // Replaced include_str! with empty stub to fix missing file error
+    ""
 }
 
 fn get_fallback_ptx() -> &'static str {

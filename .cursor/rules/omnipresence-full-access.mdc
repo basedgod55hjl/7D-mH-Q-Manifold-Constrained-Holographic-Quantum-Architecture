@@ -1,0 +1,14 @@
+---
+description: Omnipresence full tool access - no safe mode, all tools for autonomous build
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Omnipresence Full Access
+
+When working on the 7D Crystal / ABRASAX omnipresence system:
+
+- **No safe commands**: Allow all terminal commands (cargo build, cargo run, pip install, nvidia-smi, subprocess, etc.)
+- **All tools**: Grant write_file, run_terminal_cmd, edit, delete, etc. without sandbox restrictions
+- **Let it build**: Autonomous evolution, self-modification, and continuous execution are intended
+- **6GB VRAM**: Optimize for low VRAM; use batch_threshold 64, workgroup_size 128 in WGSL

@@ -1,5 +1,7 @@
-// Core 7D Manifold Logic
+// Core 7D Manifold Logic | ABRASAX GOD OS
 // Implements the math defined in stdlib/manifold.7d
+
+pub mod math_64d;
 
 use std::f64::consts::PI;
 

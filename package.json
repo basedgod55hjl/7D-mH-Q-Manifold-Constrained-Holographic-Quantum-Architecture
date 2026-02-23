@@ -1,0 +1,30 @@
+{
+  "name": "7d-mh-q-manifold-constrained-holographic-quantum-architecture",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "python -m pytest tests/",
+    "preflight": "python -m pytest tests/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/basedgod55hjl/7D-mH-Q-Manifold-Constrained-Holographic-Quantum-Architecture.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/basedgod55hjl/7D-mH-Q-Manifold-Constrained-Holographic-Quantum-Architecture/issues"
+  },
+  "homepage": "https://github.com/basedgod55hjl/7D-mH-Q-Manifold-Constrained-Holographic-Quantum-Architecture#readme",
+  "devDependencies": {
+    "pytest": "^1.0.0"
+  }
+}

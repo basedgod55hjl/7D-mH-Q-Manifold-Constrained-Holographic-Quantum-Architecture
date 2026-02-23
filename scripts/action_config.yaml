@@ -1,0 +1,84 @@
+# action_config.yaml - Omnipresence Autonomous Agent Configuration
+# No restrictions. Full tool access. All 4 parallel agents.
+
+system:
+  name: "ABRASAX Omnipresence"
+  mode: "autonomous"
+  restrictions: "none"
+  failsafe: false
+  max_parallel_agents: 4
+  yield_interval: 0.0  # no sleep
+
+models:
+  reasoning: "deepseek/deepseek-r1-0528-qwen3-8b"
+  embedding: "text-embedding-nomic-embed-text-v1.5"
+  vision: "qwen/qwen3-vl-4b"
+  fallback: "gpt-oss-6.0b-specialized-all-pruned-moe-only-7-experts-i1"
+
+endpoints:
+  primary: "http://127.0.0.1:1234/v1"
+  secondary: "http://10.5.0.2:55555/v1"
+
+hardware:
+  nvidia:
+    device: "GTX 1660 Ti"
+    vram_mb: 6144
+    batch_threshold: 64
+    workgroup_size: 128
+  amd_igpu:
+    device: "gfx90c"
+    shared_mem_mb: 6218
+    compute_units: 7
+    opencl: true
+
+agents:
+  - name: "reader"
+    type: "self_read"
+    scan_dirs:
+      - "C:\\Users\\BASEDGOD\\Desktop\\SYSTEM CONFIG\\00_KERNEL"
+      - "C:\\Users\\BASEDGOD\\Desktop\\SYSTEM CONFIG\\01_RUNTIME"
+      - "C:\\Users\\BASEDGOD\\Desktop\\SYSTEM CONFIG\\09_AGI_CONFIG"
+      - "C:\\Users\\BASEDGOD\\Desktop\\SYSTEM CONFIG\\12_GPU_COMPUTE"
+      - "C:\\Users\\BASEDGOD\\Desktop\\SYSTEM CONFIG\\LLM_ENGINE"
+    extensions: [".py", ".rs", ".cu", ".yaml", ".json", ".toml", ".md"]
+
+  - name: "reasoner"
+    type: "deepseek_r1"
+    model: "deepseek/deepseek-r1-0528-qwen3-8b"
+    temperature: 0.3
+    max_tokens: 2048
+
+  - name: "embedder"
+    type: "nomic_embed"
+    model: "text-embedding-nomic-embed-text-v1.5"
+    target: "amd_igpu_vram"
+    batch_size: 64
+
+  - name: "executor"
+    type: "code_execute"
+    allowed_actions:
+      - "write_file"
+      - "run_command"
+      - "compile"
+      - "kill_process"
+      - "mouse_click"
+      - "type_text"
+      - "hotkey"
+
+rewards:
+  embedding_quality:
+    metric: "cosine_similarity"
+    threshold: 0.85
+    reward: 1.0
+  self_upgrade:
+    metric: "code_compiles"
+    reward: 2.0
+  reasoning_quality:
+    metric: "action_success_rate"
+    threshold: 0.7
+    reward: 1.5
+
+logging:
+  thought_stream: "scripts/logs/thought_stream.jsonl"
+  metrics: "scripts/logs/metrics.jsonl"
+  embeddings: "scripts/logs/embeddings.jsonl"

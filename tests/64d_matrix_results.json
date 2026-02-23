@@ -1,0 +1,47 @@
+[
+  {
+    "dims": 7,
+    "label": "ORIGINAL",
+    "norm": 22.81192419306131,
+    "projected_norm": 0.910728653926687,
+    "s2_bound": 0.01,
+    "stable": "False",
+    "phi_violations": 0,
+    "compression_ratio": 49,
+    "reconstruction_error": 0.0009102002279580368,
+    "top_eigenvalue": 1.7693205450242517,
+    "spectral_gap": 0.2802003120715566,
+    "phi_correlation": -0.9182680986405722,
+    "elapsed_ms": 9.732599999551894
+  },
+  {
+    "dims": 26,
+    "label": "BOSONIC STRING",
+    "norm": 213395.28842826412,
+    "projected_norm": 0.9999895215842696,
+    "s2_bound": 0.005188745216627709,
+    "stable": "False",
+    "phi_violations": 0,
+    "compression_ratio": 676,
+    "reconstruction_error": 0.0009993535464536468,
+    "top_eigenvalue": 1.8638625573262801,
+    "spectral_gap": 0.029663645949209894,
+    "phi_correlation": -0.9774143426707048,
+    "elapsed_ms": 5.024600000979262
+  },
+  {
+    "dims": 64,
+    "label": "FULL SIMD",
+    "norm": 18651559751038.77,
+    "projected_norm": 0.9999999999998802,
+    "s2_bound": 0.0033071891388307384,
+    "stable": "False",
+    "phi_violations": 0,
+    "compression_ratio": 4096,
+    "reconstruction_error": 0.0009993640115412612,
+    "top_eigenvalue": 1.8722844326922514,
+    "spectral_gap": 0.005407467440576852,
+    "phi_correlation": -0.9807984426833911,
+    "elapsed_ms": 9.459799999604002
+  }
+]

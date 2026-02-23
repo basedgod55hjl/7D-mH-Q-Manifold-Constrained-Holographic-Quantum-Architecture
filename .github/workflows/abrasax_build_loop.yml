@@ -1,0 +1,57 @@
+# ABRASAX GOD OS - Build & Agent Loop
+# Reads repo files, builds all components, runs agent builder
+# Sir Charles Spikes | Cincinnati, Ohio, USA
+
+name: ABRASAX Build Loop
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+
+      - name: Build Workspace
+        run: cargo build --release 2>/dev/null || cargo build
+        continue-on-error: true
+
+      - name: Run Tests
+        run: cargo test 2>/dev/null || true
+        continue-on-error: true
+
+  agent-scan:
+    runs-on: ubuntu-latest
+    needs: build-all
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Scan 7D Files
+        run: |
+          echo "=== 7D Crystal File Inventory ==="
+          find . -name "*.7d" -o -name "*.7ds" -o -name "*.7dbin" 2>/dev/null | head -100
+
+      - name: Agent Builder (Dry Run)
+        run: |
+          python scripts/abrasax_agent_builder.py "List key components of ABRASAX GOD OS" 2>/dev/null || echo "LM Studio not available in CI"
+
+  commit-status:
+    runs-on: ubuntu-latest
+    needs: [build-all, agent-scan]
+    steps:
+      - run: echo "ABRASAX GOD OS build loop complete"

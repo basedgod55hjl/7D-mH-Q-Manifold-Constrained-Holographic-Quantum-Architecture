@@ -13,6 +13,7 @@ pub use allocator::ManifoldAllocator;
 pub use executor::{ExecutionContext, ExecutionResult, HardwareExecutor};
 pub use jit::JIT7D;
 pub use quantum::QuantumStateManager;
+use crystal_runtime::api;
 
 /// 7D Crystal Binary Header
 /// Contains metadata for 7D manifold programs
@@ -198,8 +199,14 @@ impl SevenDLoader {
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     println!("=== 7D Crystal Runtime v1.0 ===");
+
+    // Start the API Bridge for VLC / LM Studio asynchronously
+    tokio::spawn(async {
+        api::start_api_server().await;
+    });
 
     // Check for command line args or use default
     let args: Vec<String> = std::env::args().collect();
@@ -216,6 +223,9 @@ fn main() -> Result<()> {
         println!("  S²  = 0.01");
         println!("JIT compilation system ready for 7D Crystal execution.");
         println!("\nUsage: crystal-runtime <path-to-.7dbin>");
+        
+        // Keep the main thread alive for the API server
+        tokio::signal::ctrl_c().await?;
         return Ok(());
     };
 
@@ -228,5 +238,7 @@ fn main() -> Result<()> {
     println!("JIT Compiler initialized with Φ constants.");
     println!("JIT compilation system ready for 7D Crystal execution.");
 
+    // Keep the main thread alive for the API server
+    tokio::signal::ctrl_c().await?;
     Ok(())
 }

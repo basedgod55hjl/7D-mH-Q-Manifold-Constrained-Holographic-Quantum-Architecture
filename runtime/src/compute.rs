@@ -78,7 +78,7 @@ impl ComputeDispatcher {
             gpu,
             backend,
             stats: ComputeStats::default(),
-            batch_threshold: 64,  // Use GPU for batches >= 64
+            batch_threshold: 64,  // 6GB VRAM: Use GPU for batches >= 64
         }
     }
     
@@ -255,28 +255,28 @@ impl ComputeDispatcher {
         // CPU fallback - simplified fold
         let results: Vec<Vector7D> = (0..n)
             .map(|i| {
-                let mut out = Vector7D::zeros();
+                let mut out = Vector7D::zero();
                 let phase = phases[i];
-                let cos_p = (phase * PHI).cos();
-                let sin_p = (phase * PHI).sin();
+                let cos_p = (phase * PHI as f32).cos();
+                let sin_p = (phase * PHI as f32).sin();
                 
                 for j in 0..7 {
-                    let base = patterns[i].data[j];
-                    let mut rotated = base * cos_p;
+                    let base = patterns[i].coords[j];
+                    let mut rotated = base * cos_p as f64;
                     if j > 0 {
-                        rotated += patterns[i].data[j-1] * sin_p * 0.5;
+                        rotated += patterns[i].coords[j-1] * sin_p as f64 * 0.5;
                     }
                     if j < 6 {
-                        rotated += patterns[i].data[j+1] * sin_p * 0.5;
+                        rotated += patterns[i].coords[j+1] * sin_p as f64 * 0.5;
                     }
-                    out.data[j] = rotated;
+                    out.coords[j] = rotated;
                 }
                 
                 // Normalize
                 let norm = out.norm();
                 if norm > 1e-10 {
                     for j in 0..7 {
-                        out.data[j] /= norm;
+                        out.coords[j] /= norm;
                     }
                 }
                 out
