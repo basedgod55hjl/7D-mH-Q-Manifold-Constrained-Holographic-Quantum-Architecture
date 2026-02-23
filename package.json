@@ -9,8 +9,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "python -m pytest tests/",
-    "preflight": "python -m pytest tests/"
+    "test": "python tests/run_all.py",
+    "preflight": "npm test"
   },
   "repository": {
     "type": "git",
