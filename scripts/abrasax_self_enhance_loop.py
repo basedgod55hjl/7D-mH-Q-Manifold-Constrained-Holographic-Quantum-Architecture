@@ -273,7 +273,7 @@ def main() -> int:
                 "error": str(exc),
             }
             append_jsonl(log_path, error_row)
-            print(f"[ABRASAX] LM call failed: {exc}")
+            print(f"[ABRASAX] LM call failed (Target offline or connection refused). Sleeping and retrying.")
             if cycle_no < args.cycles:
                 time.sleep(args.interval_sec)
             continue
